@@ -1,5 +1,7 @@
 from abc import abstractmethod
 from datetime import datetime, timezone
+
+import numpy as np
 from transformers import pipeline
 from sqlmodel import Session
 
@@ -47,15 +49,35 @@ def file_reader_factory(file_name: str) -> FileReaderInterface:
 classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
 
+def chunk_text(text: str, chunk_size: int = 200, overlap: int = 50) -> list[str]:
+    words = text.split()
+    chunks = []
+    i = 0
+    while i < len(words):
+        chunk = words[i : i + chunk_size]
+        chunks.append(" ".join(chunk))
+        i += chunk_size - overlap
+    return chunks
+
+
 def process_file(file_id: int, db: Session = Depends(get_session)):
     file = db.get(FileRecord, file_id)
     if not file:
         return
     try:
-        sequence_to_classify = file.file_contents
+        chunked_sequence = chunk_text(file.file_contents)
         candidate_labels = [label.value for label in ClassificationLabel]
-        result = classifier(sequence_to_classify, candidate_labels)
-        for label, score in zip(result["labels"], result["scores"]):
+        results = {label: [] for label in candidate_labels}
+        weights = {label: [] for label in candidate_labels}
+
+        for chunk in chunked_sequence:
+            result = classifier(chunk, candidate_labels)
+            for label, score in zip(result["labels"], result["scores"]):
+                results[label].append(score)
+                weights[label].append(len(chunk.split()) * score)
+
+        for label in candidate_labels:
+            score = np.average(results[label], weights=weights[label])
             db.add(
                 FileClassification(
                     file_id=file.id,
