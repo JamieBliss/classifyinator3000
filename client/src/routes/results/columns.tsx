@@ -49,6 +49,6 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
     cell: ({ row }) => {
       const classifications = row.getValue("classifications") as SchemaFileClassificationRead[];
       return (
-        <div>{classifications.length > 0 ? classifications[0].classification_score : ''}</div>) }
+        <div>{classifications.length > 0 ? `${(parseFloat(classifications[0].classification_score.toFixed(2)) * 100)}%`: ''}</div>) }
   },
 ]
