@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from typing import Optional
 from enum import Enum
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
+from typing import List
 
 
 class FileStatus(str, Enum):
@@ -15,6 +16,7 @@ class FileRecord(SQLModel, table=True):
     filename: str
     file_contents: str
     status: FileStatus = Field(default=FileStatus.processing)
+    classifications: List["FileClassification"] = Relationship(back_populates="file")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), nullable=False
     )
@@ -40,3 +42,20 @@ class FileClassification(SQLModel, table=True):
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), nullable=False
     )
+    file: Optional[FileRecord] = Relationship(back_populates="classifications")
+
+
+class FileClassificationRead(SQLModel):
+    id: int
+    classification: ClassificationLabel
+    classification_score: float
+
+
+class FileRecordWithClassifications(SQLModel):
+    id: int
+    filename: str
+    # file_contents: str
+    status: FileStatus
+    created_at: datetime
+    updated_at: datetime
+    classifications: List[FileClassificationRead] = []

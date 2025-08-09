@@ -1,10 +1,11 @@
 from abc import abstractmethod
 from datetime import datetime, timezone
+import random
 import time
 
 from sqlmodel import Session
 
-from ..models.file_model import FileRecord
+from ..models.file_model import ClassificationLabel, FileClassification, FileRecord
 from fastapi import Depends, File
 from ..database import get_session
 
@@ -52,6 +53,14 @@ def process_file(file_id: int, db: Session = Depends(get_session)):
     try:
         time.sleep(20)
         file.status = "completed"
+        for _ in range(5):
+            db.add(
+                FileClassification(
+                    file_id=file.id,
+                    classification=random.choice(list(ClassificationLabel)),
+                    classification_score=random.random(),
+                )
+            )
     except Exception:
         file.status = "failed"
     finally:
