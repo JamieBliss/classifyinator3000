@@ -15,36 +15,38 @@ router = APIRouter(
 )
 
 
-class FileProcessorInterface:
+class FileReaderInterface:
     @abstractmethod
-    def read(self, file: File) -> str:
+    async def read(self, file: File) -> str:
         pass
 
 
-class TextFileProcessor(FileProcessorInterface):
-    def read(self, file: File) -> str:
-        return file.read().decode("utf-8")
+class TextFileReader(FileReaderInterface):
+    async def read(self, file: File) -> str:
+        contents = await file.read()
+        return contents.decode("utf-8")
 
 
-class PDFProcessor(FileProcessorInterface):
-    def read(self, file: File) -> str:
+class PDFReader(FileReaderInterface):
+    async def read(self, file: File) -> str:
         # Placeholder for PDF processing logic
         return f"Contents of PDF file: {file.filename}"
 
 
-class WordProcessor(FileProcessorInterface):
-    def read(self, file: File) -> str:
+class WordReader(FileReaderInterface):
+    async def read(self, file: File) -> str:
         # Placeholder for Word processing
         return f"Contents of Word file: {file.filename}"
 
 
-def file_processor_factory(file_type: str) -> FileProcessorInterface:
-    if file_type == "text":
-        return TextFileProcessor()
+def file_reader_factory(file_name: str) -> FileReaderInterface:
+    file_type = file_name.split(".")[-1].lower()
+    if file_type == "txt":
+        return TextFileReader()
     # elif file_type == "pdf":
-    #     return PDFProcessor()
+    #     return PDFReader()
     # elif file_type == "word":
-    #     return WordProcessor()
+    #     return WordReader()
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
 
@@ -52,12 +54,16 @@ def file_processor_factory(file_type: str) -> FileProcessorInterface:
 @router.post("/upload", response_model=FileRecord)
 async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_session)):
     try:
-        file_contents = file_processor_factory(file.content_type).read(file)
+        file_contents = await file_reader_factory(file.filename).read(file)
         file_record = FileRecord(filename=file.filename, file_contents=file_contents)
         db.add(file_record)
         db.commit()
         db.refresh(file_record)
-        return file_record
+        return {
+            "id": file_record.id,
+            "status": file_record.status,
+            "message": "File uploaded successfully!",
+        }
     finally:
         await file.close()
 
