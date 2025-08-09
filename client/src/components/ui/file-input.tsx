@@ -9,16 +9,19 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
 
-export function FileInput() {
+interface FileInputProps {
+  onFileUploadSuccess: (fileId: number) => void;
+  setIsDialogOpen: (isOpen: boolean) => void;
+}
+
+export function FileInput({onFileUploadSuccess, setIsDialogOpen}: FileInputProps ) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
 
   const handleCancel = () => {
     setSelectedFile(null);
@@ -56,7 +59,8 @@ export function FileInput() {
         setUploadStatus("success");
         setMessage(result.message ?? "File uploaded successfully!");
         setSelectedFile(null); // Clear the file on successful upload
-        navigate({to: "/results"});
+        onFileUploadSuccess(result.id);
+        setIsDialogOpen(false);
       } else {
         setUploadStatus("error");
         setMessage(result.message ?? "An unknown error occurred.");

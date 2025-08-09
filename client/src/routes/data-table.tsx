@@ -1,5 +1,6 @@
-import * as React from "react"
+import * as React from 'react'
 import {
+  type ColumnDef,
   type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
@@ -9,17 +10,17 @@ import {
   type SortingState,
   useReactTable,
   type VisibilityState,
-} from "@tanstack/react-table"
-import { ChevronDown } from "lucide-react"
+} from '@tanstack/react-table'
+import { ChevronDown, UploadCloud } from 'lucide-react'
 
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -27,22 +28,30 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-
+} from '@/components/ui/table'
+import type { SchemaFileRecordWithClassifications } from '@/types/types'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { FileInput } from '@/components/ui/file-input'
 
 interface DataTableProps {
-  data: any[]
-  columns: any[]
+  data: SchemaFileRecordWithClassifications[]
+  columns: ColumnDef<SchemaFileRecordWithClassifications>[]
+  onFileUploadSuccess: (fileId: number) => void
 }
 
-export function DataTable({ data, columns }: DataTableProps) {
+export function DataTable({
+  data,
+  columns,
+  onFileUploadSuccess,
+}: DataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   )
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
 
   const table = useReactTable({
     data,
@@ -68,9 +77,11 @@ export function DataTable({ data, columns }: DataTableProps) {
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter files..."
-          value={(table.getColumn("filename")?.getFilterValue() as string) ?? ""}
+          value={
+            (table.getColumn('filename')?.getFilterValue() as string) ?? ''
+          }
           onChange={(event) =>
-            table.getColumn("filename")?.setFilterValue(event.target.value)
+            table.getColumn('filename')?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -80,6 +91,20 @@ export function DataTable({ data, columns }: DataTableProps) {
               Columns <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger className="ml-2">
+              <Button>
+                Upload File
+                <UploadCloud />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <FileInput
+                onFileUploadSuccess={onFileUploadSuccess}
+                setIsDialogOpen={setIsDialogOpen}
+              />
+            </DialogContent>
+          </Dialog>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -113,7 +138,7 @@ export function DataTable({ data, columns }: DataTableProps) {
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   )
@@ -126,13 +151,13 @@ export function DataTable({ data, columns }: DataTableProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -153,7 +178,7 @@ export function DataTable({ data, columns }: DataTableProps) {
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredSelectedRowModel().rows.length} of{' '}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
         <div className="space-x-2">
