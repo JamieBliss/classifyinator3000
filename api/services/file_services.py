@@ -1,8 +1,6 @@
 from abc import abstractmethod
 from datetime import datetime, timezone
-import random
-import time
-
+from transformers import pipeline
 from sqlmodel import Session
 
 from ..models.file_model import ClassificationLabel, FileClassification, FileRecord
@@ -46,21 +44,26 @@ def file_reader_factory(file_name: str) -> FileReaderInterface:
         raise ValueError(f"Unsupported file type: {file_type}")
 
 
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+
+
 def process_file(file_id: int, db: Session = Depends(get_session)):
     file = db.get(FileRecord, file_id)
     if not file:
         return
     try:
-        time.sleep(20)
-        file.status = "completed"
-        for _ in range(5):
+        sequence_to_classify = file.file_contents
+        candidate_labels = [label.value for label in ClassificationLabel]
+        result = classifier(sequence_to_classify, candidate_labels)
+        for label, score in zip(result["labels"], result["scores"]):
             db.add(
                 FileClassification(
                     file_id=file.id,
-                    classification=random.choice(list(ClassificationLabel)),
-                    classification_score=random.random(),
+                    classification=label,
+                    classification_score=score,
                 )
             )
+        file.status = "completed"
     except Exception:
         file.status = "failed"
     finally:
