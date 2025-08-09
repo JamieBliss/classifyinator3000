@@ -2,7 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { DataTable } from './data-table'
 import { columns } from './columns'
-import { FileStatus } from '@/types/types'
+import {
+  FileStatus,
+  type SchemaFileRecordWithClassifications,
+} from '@/types/types'
 
 export const Route = createFileRoute('/')({
   component: App,
@@ -10,7 +13,7 @@ export const Route = createFileRoute('/')({
 
 function App() {
   const [fileId, setFileId] = useState<number | null>(null)
-  const [data, setData] = useState([])
+  const [data, setData] = useState<SchemaFileRecordWithClassifications[]>([])
   const apiUrl = import.meta.env.VITE_API_URL
   const intervalRef = useRef<number | null>(null)
 
@@ -29,11 +32,21 @@ function App() {
       })
       const data = await res.json()
       let status = data.status
-      if (status === FileStatus.Completed && intervalRef.current !== null) {
+      const stop_status = [FileStatus.Failed, FileStatus.Completed]
+      if (stop_status.includes(status) && intervalRef.current !== null) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
         setFileId(null)
-        fetchData()
+        const updatedData = data.map((item: any) => {
+          if (item.id === fileId) {
+            return {
+              ...item,
+              status,
+            }
+          }
+          return item
+        })
+        setData(updatedData)
       }
     }, 2000)
   }, [fileId])
