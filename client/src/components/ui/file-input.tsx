@@ -80,7 +80,6 @@ export function FileInput({
         onFileUploadSuccess(result.id)
         setIsDialogOpen(false)
       } else if (response.status === 409) {
-        console.log('TODO: Handle conflict')
         setIsFileConflictDialogOpen(true)
       } else {
         setUploadStatus('error')
@@ -120,9 +119,9 @@ export function FileInput({
 
       {selectedFile && (
         <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 max-w-70">
             <FileIcon className="w-5 h-5 text-muted-foreground" />
-            <span className="text-sm font-medium truncate mr-2">
+            <span className="text-sm font-medium truncate mr-2 w-full">
               {selectedFile.name}
             </span>
           </div>
