@@ -57,7 +57,7 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
       return (
         <div>
           {classifications.length > 0
-            ? `${parseFloat(classifications[0].classification_score.toFixed(2)) * 100}%`
+            ? `${Math.round(classifications[0].classification_score * 100)}%`
             : ''}
         </div>
       )
