@@ -1,8 +1,10 @@
 from abc import abstractmethod
 from datetime import datetime, timezone
+import io
 
 import numpy as np
 import PyPDF2
+from docx import Document
 from transformers import pipeline
 from sqlmodel import Session
 
@@ -25,8 +27,11 @@ class TextFileReader(FileReaderInterface):
 
 class PDFReader(FileReaderInterface):
     async def read(self, file: File) -> str:
-        # Placeholder for PDF processing logic
-        pdf_reader = PyPDF2.PdfReader(file)
+        # Read the entire file content into an in-memory bytes buffer
+        pdf_contents = await file.read()
+        pdf_stream = io.BytesIO(pdf_contents)
+
+        pdf_reader = PyPDF2.PdfReader(pdf_stream)
 
         # Initialize empty string to store text
         text_content = ""
@@ -43,8 +48,16 @@ class PDFReader(FileReaderInterface):
 
 class WordReader(FileReaderInterface):
     async def read(self, file: File) -> str:
-        # Placeholder for Word processing
-        return f"Contents of Word file: {file.filename}"
+        word_contents = await file.read()
+        word_stream = io.BytesIO(word_contents)
+
+        word_reader = Document(word_stream)
+        text_content = ""
+        for paragraph in word_reader.paragraphs:
+            if paragraph.text:
+                text_content += paragraph.text + "\n"
+
+        return text_content.strip()
 
 
 def file_reader_factory(file_name: str) -> FileReaderInterface:
@@ -53,8 +66,8 @@ def file_reader_factory(file_name: str) -> FileReaderInterface:
         return TextFileReader()
     elif file_type == "pdf":
         return PDFReader()
-    # elif file_type == "word":
-    #     return WordReader()
+    elif file_type == "docx":
+        return WordReader()
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
 
