@@ -1,20 +1,20 @@
-import { FileStatus } from "@/types/types";
+import { FileStatus } from '@/types/types'
 
-export const StatusDot = ({fileStatus} : {fileStatus: FileStatus}) => {
-  let colorClass;
+export const StatusDot = ({ fileStatus }: { fileStatus: FileStatus }) => {
+  let colorClass
 
   switch (fileStatus) {
     case FileStatus.Failed:
-      colorClass = 'bg-red-500';
-      break;
+      colorClass = 'bg-red-500'
+      break
     case FileStatus.Processing:
-      colorClass = 'bg-yellow-500';
-      break;
+      colorClass = 'bg-yellow-500'
+      break
     case FileStatus.Completed:
-      colorClass = 'bg-green-500';
-      break;
+      colorClass = 'bg-green-500'
+      break
     default:
-      colorClass = 'bg-gray-300'; // fallback color
+      colorClass = 'bg-gray-300' // fallback color
   }
 
   return (
@@ -23,5 +23,5 @@ export const StatusDot = ({fileStatus} : {fileStatus: FileStatus}) => {
       aria-label={`Status: ${fileStatus}`}
       title={fileStatus}
     />
-  );
-};
+  )
+}

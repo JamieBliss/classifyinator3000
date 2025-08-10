@@ -1,31 +1,29 @@
-import {
-  type ColumnDef,
-} from "@tanstack/react-table"
-import { ArrowUpDown} from "lucide-react"
+import { type ColumnDef } from '@tanstack/react-table'
+import { ArrowUpDown } from 'lucide-react'
 
-import { Button } from "@/components/ui/button"
-import type { SchemaFileRecordWithClassifications, SchemaFileClassificationRead } from "@/types/types"
-import { StatusDot } from "./status-dot"
-
+import { Button } from '@/components/ui/button'
+import type {
+  SchemaFileRecordWithClassifications,
+  SchemaFileClassificationRead,
+} from '@/types/types'
+import { StatusDot } from './status-dot'
 
 export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <StatusDot fileStatus={row.getValue("status")} />
-    ),
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => <StatusDot fileStatus={row.getValue('status')} />,
   },
   {
-    accessorKey: "filename",
+    accessorKey: 'filename',
     enableSorting: true,
     enableColumnFilter: true,
-    cell: ({ row }) => <div>{row.getValue("filename")}</div>,
+    cell: ({ row }) => <div>{row.getValue('filename')}</div>,
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Filename
           <ArrowUpDown />
@@ -34,21 +32,35 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
     },
   },
   {
-    accessorKey: "classifications",
-    id:"classification_name",
-    header: "Classification",
+    accessorKey: 'classifications',
+    id: 'classification_name',
+    header: 'Classification',
     cell: ({ row }) => {
-      const classifications = row.getValue("classifications") as SchemaFileClassificationRead[];
+      const classifications = row.getValue(
+        'classifications',
+      ) as SchemaFileClassificationRead[]
       return (
-        <div>{classifications.length > 0 ? classifications[0].classification : ''}</div>) }
+        <div>
+          {classifications.length > 0 ? classifications[0].classification : ''}
+        </div>
+      )
+    },
   },
   {
-    accessorKey: "classifications",
-    header: "Classification Score",
+    accessorKey: 'classifications',
+    header: 'Classification Score',
     enableSorting: true,
     cell: ({ row }) => {
-      const classifications = row.getValue("classifications") as SchemaFileClassificationRead[];
+      const classifications = row.getValue(
+        'classifications',
+      ) as SchemaFileClassificationRead[]
       return (
-        <div>{classifications.length > 0 ? `${(parseFloat(classifications[0].classification_score.toFixed(2)) * 100)}%`: ''}</div>) }
+        <div>
+          {classifications.length > 0
+            ? `${parseFloat(classifications[0].classification_score.toFixed(2)) * 100}%`
+            : ''}
+        </div>
+      )
+    },
   },
 ]
