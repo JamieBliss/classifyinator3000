@@ -30,8 +30,14 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { SchemaFileRecordWithClassifications } from '@/types/types'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { FileInput } from '@/components/ui/file-input'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 interface DataTableProps {
   data: SchemaFileRecordWithClassifications[]
@@ -99,6 +105,9 @@ export function DataTable({
               </Button>
             </DialogTrigger>
             <DialogContent>
+              <VisuallyHidden asChild>
+                <DialogTitle>Upload File</DialogTitle>
+              </VisuallyHidden>
               <FileInput
                 onFileUploadSuccess={onFileUploadSuccess}
                 setIsDialogOpen={setIsDialogOpen}

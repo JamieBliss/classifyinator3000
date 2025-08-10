@@ -9,6 +9,7 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react'
+import { FileConflictDialog } from './file-conflict-dialog'
 
 interface FileInputProps {
   onFileUploadSuccess: (fileId: number) => void
@@ -25,6 +26,8 @@ export function FileInput({
     'idle' | 'success' | 'error'
   >('idle')
   const [message, setMessage] = useState('')
+  const [isFileConflictDialogOpen, setIsFileConflictDialogOpen] =
+    useState(false)
 
   const handleCancel = () => {
     setSelectedFile(null)
@@ -42,6 +45,15 @@ export function FileInput({
     }
   }
 
+  const handleFileConflict = (override: boolean) => {
+    if (override) {
+      handleUpload(true)
+    } else {
+      handleCancel()
+    }
+    setIsFileConflictDialogOpen(false)
+  }
+
   const handleUpload = async (override: boolean = false) => {
     if (!selectedFile || isLoading) return
 
@@ -52,10 +64,13 @@ export function FileInput({
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL
-      const response = await fetch(`${apiUrl}/files/upload`, {
-        method: 'POST',
-        body: formData,
-      })
+      const response = await fetch(
+        `${apiUrl}/files/upload${override ? '?override=True' : ''}`,
+        {
+          method: 'POST',
+          body: formData,
+        },
+      )
 
       const result = await response.json()
       if (response.ok) {
@@ -66,6 +81,7 @@ export function FileInput({
         setIsDialogOpen(false)
       } else if (response.status === 409) {
         console.log('TODO: Handle conflict')
+        setIsFileConflictDialogOpen(true)
       } else {
         setUploadStatus('error')
         setMessage(result.message ?? 'An unknown error occurred.')
@@ -142,6 +158,12 @@ export function FileInput({
           <span>{message}</span>
         </div>
       )}
+      <FileConflictDialog
+        filename={selectedFile?.name ?? ''}
+        isFileConflictDialogOpen={isFileConflictDialogOpen}
+        setIsFileConflictDialogOpen={setIsFileConflictDialogOpen}
+        handleFileConflict={handleFileConflict}
+      />
     </div>
   )
 }
