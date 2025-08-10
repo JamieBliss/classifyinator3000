@@ -1,10 +1,11 @@
 import { type ColumnDef } from '@tanstack/react-table'
 import { ArrowUpDown } from 'lucide-react'
-
+import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import type {
-  SchemaFileRecordWithClassifications,
-  SchemaFileClassificationRead,
+import {
+  type SchemaFileRecordWithClassifications,
+  type SchemaFileClassificationRead,
+  FileStatus,
 } from '@/types/types'
 import { StatusDot } from './status-dot'
 
@@ -36,14 +37,20 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
     id: 'classification_name',
     header: 'Classification',
     cell: ({ row }) => {
+      const status = row.getValue('status') as FileStatus
       const classifications = row.getValue(
         'classifications',
       ) as SchemaFileClassificationRead[]
-      return (
-        <div>
-          {classifications.length > 0 ? classifications[0].classification : ''}
-        </div>
-      )
+
+      if (status === FileStatus.Processing) {
+        return <Skeleton className="h-[20px] w-[100px] rounded-full" />
+      }
+
+      if (classifications.length === 0) {
+        return <div>-</div>
+      }
+
+      return <div>{classifications[0].classification}</div>
     },
   },
   {
@@ -51,16 +58,23 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
     header: 'Classification Score',
     enableSorting: true,
     cell: ({ row }) => {
+      const status = row.getValue('status') as FileStatus
       const classifications = row.getValue(
         'classifications',
       ) as SchemaFileClassificationRead[]
-      return (
-        <div>
-          {classifications.length > 0
-            ? `${Math.round(classifications[0].classification_score * 100)}%`
-            : ''}
-        </div>
+
+      if (status === FileStatus.Processing) {
+        return <Skeleton className="h-[20px] w-[40px] rounded-full" />
+      }
+
+      if (classifications.length === 0) {
+        return <div>-</div>
+      }
+
+      const classification_score = Math.round(
+        classifications[0].classification_score * 100,
       )
+      return <div>{classification_score}%</div>
     },
   },
 ]
