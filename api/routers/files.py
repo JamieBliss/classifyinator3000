@@ -80,4 +80,16 @@ def check_file_status(file_id: int, db: Session = Depends(get_session)):
     file = db.get(FileRecord, file_id)
     if not file:
         raise HTTPException(status_code=404, detail="File not found")
+    if file.status == FileStatus.failed:
+        return {
+            "status": file.status,
+            "message": "File processing failed, please check your file is not corrupted and try again",
+        }
     return {"status": file.status}
+
+
+@router.delete("/delete/{file_id}")
+def delete_file(file_id: int, db: Session = Depends(get_session)):
+    db.delete(db.get(FileRecord, file_id))
+    db.commit()
+    return {"message": "File deleted successfully"}
