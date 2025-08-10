@@ -74,7 +74,24 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
       const classification_score = Math.round(
         classifications[0].classification_score * 100,
       )
-      return <div>{classification_score}%</div>
+      // Colour confidence scores based on value - numbers might need adjusting
+      let colourClass = ''
+      if (classification_score < 20) {
+        colourClass = 'text-red-600'
+      } else if (classification_score < 40) {
+        colourClass = 'text-orange-500'
+      } else if (classification_score < 60) {
+        colourClass = 'text-yellow-500'
+      } else if (classification_score < 80) {
+        colourClass = 'text-lime-500'
+      } else {
+        colourClass = 'text-green-600'
+      }
+      return (
+        <div className={`font-medium ${colourClass}`}>
+          {classification_score}%
+        </div>
+      )
     },
   },
 ]
