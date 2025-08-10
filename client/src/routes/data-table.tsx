@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useState } from 'react'
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -32,12 +32,15 @@ import {
 import type { SchemaFileRecordWithClassifications } from '@/types/types'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogFooter,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { FileInput } from '@/components/ui/file-input'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
+import { ChartPieDonutActive } from '@/components/ui/classifications-chart'
 
 interface DataTableProps {
   data: SchemaFileRecordWithClassifications[]
@@ -50,14 +53,14 @@ export function DataTable({
   columns,
   onFileUploadSuccess,
 }: DataTableProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  )
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = useState({})
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isRowDetailsDialogOpen, setIsRowDetailsDialogOpen] = useState(false)
+  const [selectedRow, setSelectedRow] =
+    useState<SchemaFileRecordWithClassifications>()
 
   const table = useReactTable({
     data,
@@ -98,7 +101,7 @@ export function DataTable({
             </Button>
           </DropdownMenuTrigger>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger className="ml-2">
+            <DialogTrigger asChild className="ml-2">
               <Button>
                 Upload File
                 <UploadCloud />
@@ -161,6 +164,10 @@ export function DataTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  onClick={() => {
+                    setIsRowDetailsDialogOpen(true)
+                    setSelectedRow(row.original)
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -209,6 +216,17 @@ export function DataTable({
           </Button>
         </div>
       </div>
+      <Dialog
+        open={isRowDetailsDialogOpen}
+        onOpenChange={setIsRowDetailsDialogOpen}
+      >
+        <DialogContent>
+          <VisuallyHidden asChild>
+            <DialogTitle>Row Details</DialogTitle>
+          </VisuallyHidden>
+          {selectedRow && <ChartPieDonutActive row={selectedRow} />}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
