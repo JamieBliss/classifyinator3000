@@ -2,6 +2,7 @@ from abc import abstractmethod
 from datetime import datetime, timezone
 
 import numpy as np
+import PyPDF2
 from transformers import pipeline
 from sqlmodel import Session
 
@@ -25,7 +26,19 @@ class TextFileReader(FileReaderInterface):
 class PDFReader(FileReaderInterface):
     async def read(self, file: File) -> str:
         # Placeholder for PDF processing logic
-        return f"Contents of PDF file: {file.filename}"
+        pdf_reader = PyPDF2.PdfReader(file)
+
+        # Initialize empty string to store text
+        text_content = ""
+
+        # Iterate through all pages
+        for page in pdf_reader.pages:
+            # Extract text from page and append to content
+            page_text = page.extract_text()
+            if page_text:
+                text_content += page_text + "\n"
+
+        return text_content.strip()
 
 
 class WordReader(FileReaderInterface):
@@ -38,8 +51,8 @@ def file_reader_factory(file_name: str) -> FileReaderInterface:
     file_type = file_name.split(".")[-1].lower()
     if file_type == "txt":
         return TextFileReader()
-    # elif file_type == "pdf":
-    #     return PDFReader()
+    elif file_type == "pdf":
+        return PDFReader()
     # elif file_type == "word":
     #     return WordReader()
     else:
