@@ -1,6 +1,3 @@
-import { Pie, PieChart, Sector } from 'recharts'
-import type { PieSectorDataItem } from 'recharts/types/polar/Pie'
-
 import {
   Card,
   CardContent,
@@ -8,13 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart'
+import type { ChartConfig } from '@/components/ui/chart'
 import type {
   SchemaFileClassificationRead,
   SchemaFileRecordWithClassifications,
@@ -25,12 +16,14 @@ import { Select } from '@radix-ui/react-select'
 import { SelectContent, SelectItem, SelectTrigger, SelectValue } from './select'
 import { Label } from './label'
 import { Info } from 'lucide-react'
+import { ClassificationPieChart } from './classification-pie-chart'
+import { ClassificationBarChart } from './classification-bar-chart'
 
-interface ChartPieDonutActiveProps {
+interface ClassificationChart {
   row: SchemaFileRecordWithClassifications
 }
 
-export function ChartPieDonutActive({ row }: ChartPieDonutActiveProps) {
+export function ClassificationChart({ row }: ClassificationChart) {
   type chartDataType = {
     classification: string
     score: number
@@ -57,7 +50,7 @@ export function ChartPieDonutActive({ row }: ChartPieDonutActiveProps) {
     SchemaFileClassificationRead[]
   >([])
 
-  const chartConfig = selectedClassification.reduce(
+  const chartConfig: ChartConfig = selectedClassification.reduce(
     (acc, classification, index) => {
       return {
         ...acc,
@@ -102,36 +95,17 @@ export function ChartPieDonutActive({ row }: ChartPieDonutActiveProps) {
         <CardDescription>{createdAtDate}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square max-h-[400px]"
-        >
-          <PieChart>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Pie
-              data={chartData}
-              dataKey="score"
-              nameKey="classification"
-              innerRadius={60}
-              outerRadius={100}
-              strokeWidth={5}
-              activeIndex={0}
-              activeShape={({
-                outerRadius = 0,
-                ...props
-              }: PieSectorDataItem) => (
-                <Sector {...props} outerRadius={outerRadius + 10} />
-              )}
-            />
-            <ChartLegend
-              content={<ChartLegendContent nameKey="classification" />}
-              className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
-            />
-          </PieChart>
-        </ChartContainer>
+        {selectedClassification[0]?.multi_label ? (
+          <ClassificationBarChart
+            chartConfig={chartConfig}
+            chartData={chartData}
+          />
+        ) : (
+          <ClassificationPieChart
+            chartConfig={chartConfig}
+            chartData={chartData}
+          />
+        )}
         <div className="grid gap-2 mt-4">
           <div className="flex items-center gap-2">
             <Label htmlFor="classification">Classifications</Label>

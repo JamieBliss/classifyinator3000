@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/dialog'
 import { FileInput } from '@/components/ui/file-input'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
-import { ChartPieDonutActive } from '@/components/ui/classifications-chart'
+import { ClassificationChart } from '@/components/ui/classifications-chart'
 import { ProcessFileForm } from './process-file-form'
 
 interface DataTableProps {
@@ -226,13 +226,13 @@ export function DataTable({
         open={isRowDetailsDialogOpen}
         onOpenChange={setIsRowDetailsDialogOpen}
       >
-        <DialogContent>
+        <DialogContent className="!max-w-fit">
           <VisuallyHidden asChild>
             <DialogTitle>Row Details</DialogTitle>
           </VisuallyHidden>
           {selectedRow && (
             <>
-              <ChartPieDonutActive row={selectedRow} />
+              <ClassificationChart row={selectedRow} />
               <ProcessFileForm
                 row={selectedRow}
                 onFileProcessStart={onFileUploadSuccess}
