@@ -226,7 +226,7 @@ export function DataTable({
         open={isRowDetailsDialogOpen}
         onOpenChange={setIsRowDetailsDialogOpen}
       >
-        <DialogContent className="!max-w-fit">
+        <DialogContent className="!max-w-[700px]">
           <VisuallyHidden asChild>
             <DialogTitle>Row Details</DialogTitle>
           </VisuallyHidden>
