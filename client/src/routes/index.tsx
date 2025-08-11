@@ -81,6 +81,17 @@ function App() {
 
   const onFileUploadSuccess = (fileId: number) => {
     setFileId(fileId)
+    setData(
+      data.map((item: SchemaFileRecordWithClassifications) => {
+        if (item.id === fileId) {
+          return {
+            ...item,
+            status: FileStatus.Processing,
+          }
+        }
+        return item
+      }),
+    )
   }
 
   const deleteFile = async () => {
@@ -120,7 +131,11 @@ function App() {
             <DialogClose asChild>
               <Button
                 variant="outline"
-                onClick={() => setIsFileProcessingErrorDialogOpen(false)}
+                onClick={() => {
+                  setErrorFilename(null)
+                  setFileId(null)
+                  setIsFileProcessingErrorDialogOpen(false)
+                }}
               >
                 Close
               </Button>
