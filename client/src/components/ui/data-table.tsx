@@ -42,6 +42,7 @@ import {
 import { FileInput } from '@/components/ui/file-input'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { ChartPieDonutActive } from '@/components/ui/classifications-chart'
+import { ProcessFileForm } from './process-file-form'
 
 interface DataTableProps {
   data: SchemaFileRecordWithClassifications[]
@@ -229,7 +230,16 @@ export function DataTable({
           <VisuallyHidden asChild>
             <DialogTitle>Row Details</DialogTitle>
           </VisuallyHidden>
-          {selectedRow && <ChartPieDonutActive row={selectedRow} />}
+          {selectedRow && (
+            <>
+              <ChartPieDonutActive row={selectedRow} />
+              <ProcessFileForm
+                row={selectedRow}
+                onFileProcessStart={onFileUploadSuccess}
+                closeDialog={() => setIsRowDetailsDialogOpen(false)}
+              />
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

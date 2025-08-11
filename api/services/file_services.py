@@ -8,7 +8,12 @@ from docx import Document
 from transformers import pipeline
 from sqlmodel import Session
 
-from ..models.file_model import ClassificationLabel, FileClassification, FileRecord
+from ..models.file_model import (
+    ChunkingStrategy,
+    ClassificationLabel,
+    FileClassification,
+    FileRecord,
+)
 from fastapi import Depends, File
 from ..database import get_session
 
@@ -72,10 +77,23 @@ def file_reader_factory(file_name: str) -> FileReaderInterface:
         raise ValueError(f"Unsupported file type: {file_type}")
 
 
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+def get_classifier(multi_label: bool = False):
+    return pipeline(
+        "zero-shot-classification",
+        model="facebook/bart-large-mnli",
+        multi_label=multi_label,
+    )
 
 
-def chunk_text(text: str, chunk_size: int = 200, overlap: int = 50) -> list[str]:
+def chunk_text(
+    text: str,
+    chunking_strategy: ChunkingStrategy,
+    chunk_size: int = 200,
+    overlap: int = 50,
+) -> list[str]:
+    if chunking_strategy == ChunkingStrategy.paragraph:
+        return text.split("\n\n")
+
     words = text.split()
     chunks = []
     i = 0
@@ -86,16 +104,25 @@ def chunk_text(text: str, chunk_size: int = 200, overlap: int = 50) -> list[str]
     return chunks
 
 
-def process_file(file_id: int, db: Session = Depends(get_session)):
+def process_file(
+    file_id: int,
+    chunking_strategy: ChunkingStrategy,
+    chunk_size: int,
+    overlap: int,
+    multi_label: bool = False,
+    db: Session = Depends(get_session),
+):
     file = db.get(FileRecord, file_id)
     if not file:
         return
     try:
-        chunked_sequence = chunk_text(file.file_contents)
+        chunked_sequence = chunk_text(
+            file.file_contents, chunking_strategy, chunk_size, overlap
+        )
         candidate_labels = [label.value for label in ClassificationLabel]
         results = {label: [] for label in candidate_labels}
         weights = {label: [] for label in candidate_labels}
-
+        classifier = get_classifier(multi_label)
         for chunk in chunked_sequence:
             result = classifier(chunk, candidate_labels)
             for label, score in zip(result["labels"], result["scores"]):
@@ -109,6 +136,10 @@ def process_file(file_id: int, db: Session = Depends(get_session)):
                     file_id=file.id,
                     classification=label,
                     classification_score=score,
+                    multi_label=multi_label,
+                    chunking_strategy=chunking_strategy,
+                    chunk_size=chunk_size,
+                    chunk_overlap_size=overlap,
                 )
             )
         file.status = "completed"

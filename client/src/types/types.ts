@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/files/process": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Process File Request */
+        post: operations["process_file_request_files_process_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/files/upload": {
         parameters: {
             query?: never;
@@ -85,6 +102,11 @@ export interface components {
             file: string;
         };
         /**
+         * ChunkingStrategy
+         * @enum {string}
+         */
+        ChunkingStrategy: ChunkingStrategy;
+        /**
          * ClassificationLabel
          * @enum {string}
          */
@@ -93,6 +115,8 @@ export interface components {
         FileClassificationRead: {
             /** Id */
             id: number;
+            /** Multi Label */
+            multi_label: boolean;
             classification: components["schemas"]["ClassificationLabel"];
             /** Classification Score */
             classification_score: number;
@@ -151,6 +175,27 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** ProcessFileRequest */
+        ProcessFileRequest: {
+            /** File Id */
+            file_id: number;
+            chunking_strategy: components["schemas"]["ChunkingStrategy"];
+            /**
+             * Chunk Size
+             * @default 200
+             */
+            chunk_size: number;
+            /**
+             * Overlap
+             * @default 50
+             */
+            overlap: number;
+            /**
+             * Multi Label
+             * @default false
+             */
+            multi_label: boolean;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -168,12 +213,14 @@ export interface components {
     pathItems: never;
 }
 export type SchemaBodyUploadFileFilesUploadPost = components['schemas']['Body_upload_file_files_upload_post'];
+export type SchemaChunkingStrategy = components['schemas']['ChunkingStrategy'];
 export type SchemaClassificationLabel = components['schemas']['ClassificationLabel'];
 export type SchemaFileClassificationRead = components['schemas']['FileClassificationRead'];
 export type SchemaFileRecord = components['schemas']['FileRecord'];
 export type SchemaFileRecordWithClassifications = components['schemas']['FileRecordWithClassifications'];
 export type SchemaFileStatus = components['schemas']['FileStatus'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
+export type SchemaProcessFileRequest = components['schemas']['ProcessFileRequest'];
 export type SchemaValidationError = components['schemas']['ValidationError'];
 export type $defs = Record<string, never>;
 export interface operations {
@@ -193,6 +240,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FileRecordWithClassifications"][];
+                };
+            };
+        };
+    };
+    process_file_request_files_process_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProcessFileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileRecord"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -294,6 +374,10 @@ export interface operations {
             };
         };
     };
+}
+export enum ChunkingStrategy {
+    Number = "Number",
+    Paragraph = "Paragraph"
 }
 export enum ClassificationLabel {
     Technical_Documentation = "Technical Documentation",

@@ -34,11 +34,20 @@ class ClassificationLabel(str, Enum):
     other = "Other"
 
 
+class ChunkingStrategy(str, Enum):
+    number = "Number"
+    paragraph = "Paragraph"
+
+
 class FileClassification(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     file_id: Optional[int] = Field(default=None, foreign_key="filerecord.id")
     classification: ClassificationLabel
     classification_score: float
+    multi_label: bool = Field(default=False)
+    chunking_strategy: Optional[ChunkingStrategy] = None
+    chunk_size: Optional[int] = None
+    chunk_overlap_size: Optional[int] = None
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), nullable=False
     )
@@ -47,6 +56,7 @@ class FileClassification(SQLModel, table=True):
 
 class FileClassificationRead(SQLModel):
     id: int
+    multi_label: bool
     classification: ClassificationLabel
     classification_score: float
 

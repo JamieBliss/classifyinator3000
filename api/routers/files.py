@@ -1,11 +1,21 @@
 from datetime import datetime, timezone
 from ..services.file_services import file_reader_factory
-from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, BackgroundTasks
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    UploadFile,
+    HTTPException,
+    BackgroundTasks,
+    Body,
+)
 from ..services.file_services import process_file
-from sqlmodel import Session
+from sqlmodel import Session, select
+from pydantic import BaseModel
 
 from ..database import get_session
 from ..models.file_model import (
+    ChunkingStrategy,
     FileClassification,
     FileRecord,
     FileRecordWithClassifications,
@@ -26,6 +36,53 @@ def list_files(db: Session = Depends(get_session)):
     return files
 
 
+DEFAULT_CHUNK_SIZE = 200
+DEFAULT_OVERLAP = 50
+DEFAULT_MULTI_LABEL = False
+
+
+class ProcessFileRequest(BaseModel):
+    file_id: int
+    chunking_strategy: ChunkingStrategy
+    chunk_size: int = DEFAULT_CHUNK_SIZE
+    overlap: int = DEFAULT_OVERLAP
+    multi_label: bool = DEFAULT_MULTI_LABEL
+
+
+@router.post("/process", response_model=FileRecord)
+async def process_file_request(
+    file_details: ProcessFileRequest = Body(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_session),
+):
+    # If it is called with the same params as before we will delete it
+    statement = select(FileClassification).where(
+        FileClassification.file_id == file_details.file_id,
+        FileClassification.chunking_strategy == file_details.chunking_strategy,
+        FileClassification.chunk_size == file_details.chunk_size,
+        FileClassification.chunk_overlap_size == file_details.overlap,
+        FileClassification.multi_label == file_details.multi_label,
+    )
+    classifications = db.exec(statement).all()
+    for classification in classifications:
+        db.delete(classification)
+    file_record = db.get(FileRecord, file_details.file_id)
+    file_record.status = FileStatus.processing
+    db.add(file_record)
+    db.commit()
+    background_tasks.add_task(
+        process_file,
+        file_details.file_id,
+        file_details.chunking_strategy,
+        file_details.chunk_size,
+        file_details.overlap,
+        file_details.multi_label,
+        db,
+    )
+
+    return {"id": file_details.file_id, "status": FileStatus.processing}
+
+
 @router.post("/upload", response_model=FileRecord)
 async def upload_file(
     file: UploadFile = File(...),
@@ -34,9 +91,9 @@ async def upload_file(
     background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     # check if file exists in db
-    file_record = (
-        db.query(FileRecord).filter(FileRecord.filename == file.filename).first()
-    )
+    statement = select(FileRecord).where(FileRecord.filename == file.filename)
+    file_record = db.exec(statement).first()
+
     if not override and file_record:
         raise HTTPException(
             status_code=409,
@@ -55,15 +112,24 @@ async def upload_file(
             file_record.status = FileStatus.processing
             file_record.updated_at = datetime.now(timezone.utc)
             db.add(file_record)
-            file_classifications = db.query(FileClassification).filter(
+            statement = select(FileClassification).where(
                 FileClassification.file_id == file_record.id
             )
+            file_classifications = db.exec(statement).all()
             for file_classification in file_classifications:
                 db.delete(file_classification)
 
         db.commit()
         db.refresh(file_record)
-        background_tasks.add_task(process_file, file_record.id, db)
+        background_tasks.add_task(
+            process_file,
+            file_record.id,
+            ChunkingStrategy.number,
+            DEFAULT_CHUNK_SIZE,
+            DEFAULT_OVERLAP,
+            DEFAULT_MULTI_LABEL,
+            db,
+        )
         return {
             "id": file_record.id,
             "status": file_record.status,
@@ -90,6 +156,12 @@ def check_file_status(file_id: int, db: Session = Depends(get_session)):
 
 @router.delete("/delete/{file_id}")
 def delete_file(file_id: int, db: Session = Depends(get_session)):
+    statement = db.select(FileClassification).where(
+        FileClassification.file_id == file_id
+    )
+    file_classifications = db.exec(statement).all()
+    for file_classification in file_classifications:
+        db.delete(file_classification)
     db.delete(db.get(FileRecord, file_id))
     db.commit()
     return {"message": "File deleted successfully"}
