@@ -141,8 +141,8 @@ export function ClassificationChart({ row }: ClassificationChart) {
                 } = classifications[key][0]
                 return (
                   <SelectItem key={key} value={key}>
-                    cstrat: {chunking_strategy}, cs: {chunk_size}, co:{' '}
-                    {chunk_overlap_size}, ml:{' '}
+                    cstrat: {chunking_strategy}, cs: {chunk_size || 'N/A'}, co:{' '}
+                    {chunk_overlap_size || 'N/A'}, ml:{' '}
                     {multi_label === true ? 'true' : 'false'}
                   </SelectItem>
                 )
