@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Optional
 from ..services.file_services import file_reader_factory
 from fastapi import (
     APIRouter,
@@ -44,8 +45,8 @@ DEFAULT_MULTI_LABEL = False
 class ProcessFileRequest(BaseModel):
     file_id: int
     chunking_strategy: ChunkingStrategy
-    chunk_size: int = DEFAULT_CHUNK_SIZE
-    overlap: int = DEFAULT_OVERLAP
+    chunk_size: Optional[int] = None
+    overlap: Optional[int] = None
     multi_label: bool = DEFAULT_MULTI_LABEL
 
 
