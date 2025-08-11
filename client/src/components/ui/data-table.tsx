@@ -171,6 +171,7 @@ export function DataTable({
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
                   onClick={() => {
+                    if (row.original.status === FileStatus.Processing) return
                     setIsRowDetailsDialogOpen(true)
                     setSelectedRow(row.original)
                   }}
