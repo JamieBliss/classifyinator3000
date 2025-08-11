@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import { DataTable } from './data-table'
-import { columns } from './columns'
+import { DataTable } from '@/components/ui/data-table'
+import { columns } from '@/components/ui/columns'
 import {
   FileStatus,
   type SchemaFileRecordWithClassifications,
