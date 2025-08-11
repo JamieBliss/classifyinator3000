@@ -29,12 +29,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { SchemaFileRecordWithClassifications } from '@/types/types'
+import {
+  FileStatus,
+  type SchemaFileRecordWithClassifications,
+} from '@/types/types'
 import {
   Dialog,
-  DialogClose,
   DialogContent,
-  DialogFooter,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
@@ -102,7 +103,11 @@ export function DataTable({
           </DropdownMenuTrigger>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild className="ml-2">
-              <Button>
+              <Button
+                disabled={data
+                  .map((item) => item.status)
+                  .includes(FileStatus.Processing)}
+              >
                 Upload File
                 <UploadCloud />
               </Button>
