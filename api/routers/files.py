@@ -157,12 +157,11 @@ def check_file_status(file_id: int, db: Session = Depends(get_session)):
 
 @router.delete("/delete/{file_id}")
 def delete_file(file_id: int, db: Session = Depends(get_session)):
-    statement = db.select(FileClassification).where(
-        FileClassification.file_id == file_id
-    )
+    statement = select(FileClassification).where(FileClassification.file_id == file_id)
     file_classifications = db.exec(statement).all()
     for file_classification in file_classifications:
         db.delete(file_classification)
-    db.delete(db.get(FileRecord, file_id))
+    statement = select(FileRecord).where(FileRecord.id == file_id)
+    db.delete(db.exec(statement).first())
     db.commit()
     return {"message": "File deleted successfully"}
