@@ -56,7 +56,7 @@ export function ClassificationChart({ row }: ClassificationChart) {
         ...acc,
         [classification.id]: {
           label: classification.classification,
-          color: `var(--chart-${index + 1})`,
+          color: `var(--chart-${classification.classification.toLowerCase().replace(' ', '-')})`,
         },
       }
     },
