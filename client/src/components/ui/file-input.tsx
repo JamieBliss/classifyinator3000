@@ -125,23 +125,26 @@ export function FileInput({
               {selectedFile.name}
             </span>
           </div>
-          <Button
-            onClick={() => handleUpload(false)}
-            disabled={isLoading}
-            size="sm"
-          >
-            {isLoading && <Loader2Icon className="w-4 h-4 mr-2 animate-spin" />}
-            {isLoading ? 'Uploading...' : 'Upload'}
-          </Button>
-          <Button
-            onClick={handleCancel}
-            disabled={isLoading}
-            size="sm"
-            className="ml-2"
-            variant="destructive"
-          >
-            <XCircle className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => handleUpload(false)}
+              disabled={isLoading}
+              size="sm"
+            >
+              {isLoading && (
+                <Loader2Icon className="w-4 h-4 mr-2 animate-spin" />
+              )}
+              {isLoading ? 'Uploading...' : 'Upload'}
+            </Button>
+            <Button
+              onClick={handleCancel}
+              disabled={isLoading}
+              size="sm"
+              variant="destructive"
+            >
+              <XCircle className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
 
