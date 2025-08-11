@@ -233,11 +233,16 @@ export function DataTable({
           </VisuallyHidden>
           {selectedRow && (
             <>
-              <ClassificationChart row={selectedRow} />
+              {selectedRow.status !== FileStatus.Failed ? (
+                <ClassificationChart row={selectedRow} />
+              ) : (
+                <></>
+              )}
               <ProcessFileForm
                 row={selectedRow}
                 onFileProcessStart={onFileUploadSuccess}
                 closeDialog={() => setIsRowDetailsDialogOpen(false)}
+                defaultIsOpen={selectedRow.status === FileStatus.Failed}
               />
             </>
           )}

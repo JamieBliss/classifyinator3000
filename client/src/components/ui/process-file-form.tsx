@@ -18,19 +18,21 @@ interface ProcessFileFormProps {
   row: SchemaFileRecordWithClassifications
   onFileProcessStart: (fileId: number) => void
   closeDialog: () => void
+  defaultIsOpen: boolean
 }
 
 export const ProcessFileForm = ({
   row,
   onFileProcessStart,
   closeDialog,
+  defaultIsOpen,
 }: ProcessFileFormProps) => {
   type chunkTypes = 'Number' | 'Paragraph'
   const [chunkType, setChunkType] = useState<chunkTypes>('Number')
   const [chunkSize, setChunkSize] = useState<number>(200)
   const [chunkOverlapSize, setChunkOverlapSize] = useState<number>(50)
   const [multiLabel, setMultiLabel] = useState<boolean>(false)
-  const [isOpen, setIsOpen] = useState<boolean>(false)
+  const [isOpen, setIsOpen] = useState<boolean>(defaultIsOpen)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
