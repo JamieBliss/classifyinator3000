@@ -115,11 +115,23 @@ export interface components {
         FileClassificationRead: {
             /** Id */
             id: number;
-            /** Multi Label */
-            multi_label: boolean;
+            /** File Id */
+            file_id: number;
             classification: components["schemas"]["ClassificationLabel"];
             /** Classification Score */
             classification_score: number;
+            /** Multi Label */
+            multi_label: boolean;
+            chunking_strategy?: components["schemas"]["ChunkingStrategy"] | null;
+            /** Chunk Size */
+            chunk_size?: number | null;
+            /** Chunk Overlap Size */
+            chunk_overlap_size?: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** FileRecord */
         FileRecord: {

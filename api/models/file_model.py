@@ -56,9 +56,14 @@ class FileClassification(SQLModel, table=True):
 
 class FileClassificationRead(SQLModel):
     id: int
-    multi_label: bool
+    file_id: int
     classification: ClassificationLabel
     classification_score: float
+    multi_label: bool
+    chunking_strategy: Optional[ChunkingStrategy] = None
+    chunk_size: Optional[int] = None
+    chunk_overlap_size: Optional[int] = None
+    created_at: datetime
 
 
 class FileRecordWithClassifications(SQLModel):
