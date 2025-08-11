@@ -9,7 +9,7 @@ import {
 } from './select'
 import { Input } from './input'
 import { Label } from './label'
-import { Switch } from './switch'
+import { Checkbox } from './checkbox'
 import { Button } from './button'
 
 interface ProcessFileFormProps {
@@ -105,10 +105,10 @@ export const ProcessFileForm = ({
           />
         </div>
         <div className="flex items-center h-9 gap-2">
-          <Switch
+          <Checkbox
             id="multiLabel"
             checked={multiLabel}
-            onCheckedChange={setMultiLabel}
+            onCheckedChange={() => setMultiLabel(!multiLabel)}
           />
           <Label htmlFor="multiLabel">Multi-Label</Label>
         </div>
