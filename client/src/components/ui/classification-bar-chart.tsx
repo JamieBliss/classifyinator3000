@@ -34,7 +34,7 @@ export function ClassificationBarChart({
         accessibilityLayer
         data={chartData}
         layout="vertical"
-        margin={{ left: 10, right: 10 }}
+        margin={{ left: 50, right: 20 }}
       >
         <CartesianGrid horizontal={false} vertical={false} stroke="#fff" />
         <XAxis type="number" dataKey="score" hide />
