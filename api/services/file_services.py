@@ -77,10 +77,17 @@ def file_reader_factory(file_name: str) -> FileReaderInterface:
         raise ValueError(f"Unsupported file type: {file_type}")
 
 
+MODELS = [
+    "facebook/bart-large-mnli",
+    "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
+    "knowledgator/comprehend_it-base",
+]
+
+
 def get_classifier(multi_label: bool = False):
     return pipeline(
         "zero-shot-classification",
-        model="facebook/bart-large-mnli",
+        model=MODELS[0],
         multi_label=multi_label,
     )
 
@@ -127,7 +134,7 @@ def process_file(
             result = classifier(chunk, candidate_labels)
             for label, score in zip(result["labels"], result["scores"]):
                 results[label].append(score)
-                weights[label].append(len(chunk.split()) * score)
+                weights[label].append(len(chunk.split()))
 
         for label in candidate_labels:
             score = np.average(results[label], weights=weights[label])
