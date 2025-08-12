@@ -2,6 +2,8 @@
 
 The **Classifyinator3000**, is here!! A powerful tool for document classification supporting Word, PDF, and TXT files. This project provides a client interface and an API to upload documents, classify their content using zero-shot classification, and incorporate human-in-the-loop feedback for improved accuracy.
 
+[Youtube Video Demo!](https://youtu.be/Fv563-167is)
+
 ## 📦 Installation
 
 ### Client Installation
