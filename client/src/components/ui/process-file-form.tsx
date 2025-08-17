@@ -13,51 +13,37 @@ import { Checkbox } from './checkbox'
 import { Button } from './button'
 import { Collapsible, CollapsibleContent } from './collapsible'
 import { ChevronsUpDown } from 'lucide-react'
+import { useProcessFile, type ChunkTypes } from '@/hooks/use-process-file'
 
 interface ProcessFileFormProps {
-  row: SchemaFileRecordWithClassifications
+  rowId: number
   onFileProcessStart: (fileId: number) => void
   closeDialog: () => void
   defaultIsOpen: boolean
 }
 
 export const ProcessFileForm = ({
-  row,
+  rowId,
   onFileProcessStart,
   closeDialog,
   defaultIsOpen,
 }: ProcessFileFormProps) => {
-  type chunkTypes = 'Number' | 'Paragraph'
-  const [chunkType, setChunkType] = useState<chunkTypes>('Number')
-  const [chunkSize, setChunkSize] = useState<number>(200)
-  const [chunkOverlapSize, setChunkOverlapSize] = useState<number>(50)
-  const [multiLabel, setMultiLabel] = useState<boolean>(false)
   const [isOpen, setIsOpen] = useState<boolean>(defaultIsOpen)
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    const apiUrl = import.meta.env.VITE_API_URL
-    const body = {
-      file_id: row.id,
-      chunking_strategy: chunkType,
-      chunk_size: chunkType === 'Number' ? chunkSize : undefined,
-      overlap: chunkType === 'Number' ? chunkOverlapSize : undefined,
-      multi_label: multiLabel,
-    }
-    const response = await fetch(apiUrl + '/files/process', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
-    const result = await response.json()
-    if (response.ok) {
-      onFileProcessStart(result.id)
-      closeDialog()
-    }
-  }
-
+  const {
+    chunkType,
+    chunkSize,
+    chunkOverlapSize,
+    multiLabel,
+    setChunkType,
+    setChunkSize,
+    setChunkOverlapSize,
+    setMultiLabel,
+    handleSubmit,
+  } = useProcessFile({
+    rowId: rowId,
+    onFileProcessStart,
+    closeDialog,
+  })
   return (
     <div>
       <div className="flex items-center justify-between gap-2">
@@ -86,7 +72,7 @@ export const ProcessFileForm = ({
                 <Label htmlFor="chunkType">Chunking Strategy</Label>
                 <Select
                   value={chunkType}
-                  onValueChange={(value) => setChunkType(value as chunkTypes)}
+                  onValueChange={(value) => setChunkType(value as ChunkTypes)}
                 >
                   <SelectTrigger id="chunkType">
                     <SelectValue placeholder="Select a chunk type" />

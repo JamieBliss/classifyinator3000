@@ -33,16 +33,9 @@ import {
   FileStatus,
   type SchemaFileRecordWithClassifications,
 } from '@/types/types'
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { FileInput } from '@/components/ui/file-input'
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
-import { ClassificationChart } from '@/components/ui/classifications-chart'
-import { ProcessFileForm } from './process-file-form'
+import { RowDialog } from './row-dialog'
+import { UploadFile } from './upload-file'
+import { TablePagination } from './table-pagination'
 
 interface DataTableProps {
   data: SchemaFileRecordWithClassifications[]
@@ -102,27 +95,6 @@ export function DataTable({
               Columns <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild className="ml-2">
-              <Button
-                disabled={data
-                  .map((item) => item.status)
-                  .includes(FileStatus.Processing)}
-              >
-                Upload File
-                <UploadCloud />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <VisuallyHidden asChild>
-                <DialogTitle>Upload File</DialogTitle>
-              </VisuallyHidden>
-              <FileInput
-                onFileUploadSuccess={onFileUploadSuccess}
-                setIsDialogOpen={setIsDialogOpen}
-              />
-            </DialogContent>
-          </Dialog>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -143,6 +115,12 @@ export function DataTable({
               })}
           </DropdownMenuContent>
         </DropdownMenu>
+        <UploadFile
+          isDialogOpen={isDialogOpen}
+          setIsDialogOpen={setIsDialogOpen}
+          data={data}
+          onFileUploadSuccess={onFileUploadSuccess}
+        />
       </div>
       <div className="overflow-hidden rounded-md border">
         <Table>
@@ -199,55 +177,13 @@ export function DataTable({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{' '}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-      <Dialog
-        open={isRowDetailsDialogOpen}
-        onOpenChange={setIsRowDetailsDialogOpen}
-      >
-        <DialogContent className="!max-w-[700px]">
-          <VisuallyHidden asChild>
-            <DialogTitle>Row Details</DialogTitle>
-          </VisuallyHidden>
-          {selectedRow && (
-            <>
-              {selectedRow.status !== FileStatus.Failed ? (
-                <ClassificationChart row={selectedRow} />
-              ) : (
-                <></>
-              )}
-              <ProcessFileForm
-                row={selectedRow}
-                onFileProcessStart={onFileUploadSuccess}
-                closeDialog={() => setIsRowDetailsDialogOpen(false)}
-                defaultIsOpen={selectedRow.status === FileStatus.Failed}
-              />
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <TablePagination table={table} />
+      <RowDialog
+        selectedRow={selectedRow}
+        isRowDetailsDialogOpen={isRowDetailsDialogOpen}
+        setIsRowDetailsDialogOpen={setIsRowDetailsDialogOpen}
+        onFileUploadSuccess={onFileUploadSuccess}
+      />
     </div>
   )
 }
