@@ -51,7 +51,7 @@ The **Classifyinator3000**, is here!! A powerful tool for document classificatio
    pip install -r requirements.txt
    ```
 
-   Ensure `requirements.txt` includes dependencies like `transformers`, `PyPDF2`, `python-docx`, and `flask` (or your preferred API framework).
+   You may need to install libmagic if you don't already, this is used to detect mimetypes and instructions to install for all OS's can be found [here](https://pypi.org/project/python-magic/)
 
 4. **Run the API**  
    Start the API server:

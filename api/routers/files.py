@@ -13,6 +13,7 @@ from fastapi import (
 from ..services.file_services import process_file
 from sqlmodel import Session, select
 from pydantic import BaseModel
+import magic
 
 from ..database import get_session
 from ..models.file_model import (
@@ -90,6 +91,32 @@ async def process_file_request(
     return {"id": file_details.file_id, "status": FileStatus.processing}
 
 
+ALLOWED_MIME_TYPES = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+]
+
+
+async def check_file(file: File):
+    client_mime = file.content_type
+
+    file_bytes = await file.read(2048)
+    await file.seek(0)
+    real_mime = magic.from_buffer(file_bytes, mime=True)
+    if real_mime not in ALLOWED_MIME_TYPES:
+        return False, f"Invalid file type {real_mime}"
+
+    if client_mime != real_mime:
+        return (
+            False,
+            f"MIME mismatch: client said {client_mime}, but real type is {real_mime}",
+        )
+
+    return True, None
+
+
 @router.post("/upload", response_model=FileRecord)
 async def upload_file(
     file: UploadFile = File(...),
@@ -106,7 +133,9 @@ async def upload_file(
             status_code=409,
             detail=f"File '{file.filename}' already exists - retry with override flag set to true to re-upload and process the file again.",
         )
-
+    is_file_safe, err = await check_file(file)
+    if not is_file_safe:
+        raise HTTPException(status_code=400, detail=err)
     try:
         file_contents = await file_reader_factory(file.filename).read(file)
         if not file_record:
