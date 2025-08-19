@@ -157,6 +157,11 @@ def check_file_status(file_id: int, db: Session = Depends(get_session)):
 
 @router.delete("/delete/{file_id}")
 def delete_file(file_id: int, db: Session = Depends(get_session)):
+    statement = select(FileRecord).where(FileRecord.id == file_id)
+    file_id_exists = db.exec(statement).first()
+    if not file_id_exists:
+        return HTTPException(status_code=404, detail="File not found")
+
     statement = select(FileClassification).where(FileClassification.file_id == file_id)
     file_classifications = db.exec(statement).all()
     for file_classification in file_classifications:
