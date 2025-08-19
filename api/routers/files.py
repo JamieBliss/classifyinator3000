@@ -56,6 +56,12 @@ async def process_file_request(
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_session),
 ):
+    if file_details.chunk_size <= file_details.overlap:
+        raise HTTPException(
+            status_code=400,
+            detail="Chunk size must be greater than overlap",
+        )
+
     # If it is called with the same params as before we will delete it
     statement = select(FileClassification).where(
         FileClassification.file_id == file_details.file_id,

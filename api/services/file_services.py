@@ -101,6 +101,9 @@ def chunk_text(
     if chunking_strategy == ChunkingStrategy.paragraph:
         return text.split("\n\n")
 
+    if chunk_size <= overlap:
+        raise ValueError("Chunk size must be greater than overlap")
+
     words = text.split()
     chunks = []
     i = 0
