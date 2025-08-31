@@ -37,6 +37,7 @@ class ClassificationLabel(str, Enum):
 class ChunkingStrategy(str, Enum):
     number = "Number"
     paragraph = "Paragraph"
+    sentence = "Sentence"
 
 
 class FileClassification(SQLModel, table=True):
