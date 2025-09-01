@@ -84,11 +84,24 @@ MODELS = [
 ]
 
 
+def get_device():
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        return torch.device("mps")
+    else:
+        return torch.device("cpu")
+
+
+DEVICE = get_device()
+
+
 def get_classifier(multi_label: bool = False):
     return pipeline(
         "zero-shot-classification",
-        model=MODELS[0],
+        model=MODELS[1],
         multi_label=multi_label,
+        devices=DEVICE,
     )
 
 
