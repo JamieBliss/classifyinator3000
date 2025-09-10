@@ -1,11 +1,13 @@
 from abc import abstractmethod
 from datetime import datetime, timezone
 import io
+import re
+from typing import Dict, List
 
+import torch
 import numpy as np
 import PyPDF2
 from docx import Document
-from transformers import pipeline
 from sqlmodel import Session
 
 from ..models.file_model import (
@@ -15,6 +17,8 @@ from ..models.file_model import (
     FileRecord,
 )
 from fastapi import Depends, File
+from transformers import pipeline, AutoTokenizer
+from sentence_transformers import SentenceTransformer
 from ..database import get_session
 
 
@@ -81,52 +85,177 @@ MODELS = [
     "facebook/bart-large-mnli",
     "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
     "knowledgator/comprehend_it-base",
+    "Qwen/Qwen3-Embedding-0.6B",
 ]
+MODEL = MODELS[2]
 
 
 def get_device():
     if torch.cuda.is_available():
-        return torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        return torch.device("mps")
+        return "cuda:0"
     else:
-        return torch.device("cpu")
+        return "cpu"
 
 
 DEVICE = get_device()
 
 
-def get_classifier(multi_label: bool = False):
-    return pipeline(
-        "zero-shot-classification",
-        model=MODELS[1],
-        multi_label=multi_label,
-        devices=DEVICE,
-    )
+zero_shot_classifier = pipeline(
+    "zero-shot-classification",
+    model=MODEL,
+    devices=DEVICE,
+)
+
+tokenizer = AutoTokenizer.from_pretrained(MODEL, use_fast=True)
+embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
-def chunk_text(
-    text: str,
-    chunking_strategy: ChunkingStrategy,
-    chunk_size: int = 200,
-    overlap: int = 50,
-) -> list[str]:
-    if chunking_strategy == ChunkingStrategy.paragraph:
-        return text.split("\n\n")
-
-    if chunking_strategy == ChunkingStrategy.sentence:
-        return text.split(". ")
-
-    if chunk_size <= overlap:
-        raise ValueError("Chunk size must be greater than overlap")
-
-    words = text.split()
+def chunk_text(text: str):
+    # basic implementation but allows easy improvements for headings and lists
     chunks = []
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    paragraphs = re.split(r"\n\s*\n+", text.strip())
+    offset = 0
+    for paragraph in paragraphs:
+        if paragraph.strip():
+            chunks.append(
+                {
+                    "text": paragraph.strip(),
+                    "start": offset,
+                    "end": offset + len(paragraph),
+                    "token_count": None,
+                }
+            )
+            offset += len(paragraph)
+
+    return chunks
+
+
+def group_similar_chunks(chunks: List[Dict], similarity_threshold: float = 0.85):
+    text = [chunk["text"] for chunk in chunks]
+    embeddings = embed_model.encode(text, normalize_embeddings=True)
+
+    grouped_chunks = []
     i = 0
-    while i < len(words):
-        chunk = words[i : i + chunk_size]
-        chunks.append(" ".join(chunk))
-        i += chunk_size - overlap
+    while i < len(chunks):
+        current = chunks[i]
+        current_embedding = embeddings[i]
+        j = i + 1
+        while j < len(chunks):
+            # because we normalised earlier we dont need to run cosine sim
+            sim = float(np.dot(current_embedding, embeddings[j]))
+            if sim > similarity_threshold:
+                current["text"] += "\n" + chunks[j]["text"]
+                current["end"] = chunks[j]["end"]
+                current_embedding = current_embedding + embeddings[j]
+                current_embedding = current_embedding / np.linalg.norm(
+                    current_embedding
+                )
+                j += 1
+            else:
+                break
+        grouped_chunks.append(current)
+        i = j
+    return grouped_chunks
+
+
+def split_large_paragraph(paragraph: str, max_tokens: int):
+    """Split a paragraph into subchunks under max_tokens."""
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", paragraph) if s.strip()]
+    chunks, current = [], []
+
+    for sent in sentences:
+        candidate = " ".join(current + [sent]).strip()
+        if count_tokens(candidate) > max_tokens:
+            if current:
+                chunks.append(" ".join(current).strip())
+                current = [sent]
+            else:
+                # sentence itself too long -> split by words
+                words = sent.split()
+                subcurrent = []
+                for w in words:
+                    subcandidate = " ".join(subcurrent + [w])
+                    if count_tokens(subcandidate) > max_tokens:
+                        chunks.append(" ".join(subcurrent))
+                        subcurrent = [w]
+                    else:
+                        subcurrent.append(w)
+                if subcurrent:
+                    chunks.append(" ".join(subcurrent))
+                current = []
+        else:
+            current.append(sent)
+
+    if current:
+        chunks.append(" ".join(current).strip())
+    return chunks
+
+
+def count_tokens(text: str):
+    return len(tokenizer.encode(text, add_special_tokens=False))
+
+
+def chunk_by_token(chunk: Dict, chunk_size=500) -> List[Dict]:
+    # Need to think about overlap and when to do it
+    token_count = count_tokens(chunk["text"])
+    if token_count <= chunk_size:
+        return [{**chunk, "token_count": token_count}]
+
+    # otherwise split into sentences
+    sentences = [
+        s.strip() for s in re.split(r"(?<=[.!?])\s+", chunk["text"]) if s.strip()
+    ]
+
+    # Start & End data is being lost
+    chunks, current = [], []
+    for sentence in sentences:
+        candidate = " ".join(current + [sentence]).strip()
+        if count_tokens(candidate) > chunk_size:
+            if current:
+                chunks.append(
+                    {
+                        "text": " ".join(current).strip(),
+                        "token_count": count_tokens(" ".join(current).strip()),
+                    }
+                )
+                current = [sentence]
+            else:
+                # sentence itself too long -> split by words
+                words = sentence.split()
+                word_current = []
+                for word in words:
+                    subcandidate = " ".join(word_current + [word])
+                    if count_tokens(subcandidate) > chunk_size:
+                        chunks.append(
+                            {
+                                "test": " ".join(word_current).strip(),
+                                "token_count": count_tokens(
+                                    " ".join(word_current).strip()
+                                ),
+                            }
+                        )
+                        word_current = [word]
+                    else:
+                        word_current.append(word)
+                if word_current:
+                    chunks.append(
+                        {
+                            "test": " ".join(word_current).strip(),
+                            "token_count": count_tokens(" ".join(word_current).strip()),
+                        }
+                    )
+                current = []
+        else:
+            current.append({"text": sentence, "token_count": count_tokens(sentence)})
+
+    if current:
+        chunks.append(
+            {
+                "text": " ".join(current).strip(),
+                "token_count": count_tokens(" ".join(current).strip()),
+            }
+        )
     return chunks
 
 
@@ -137,23 +266,25 @@ def process_file(
     overlap: int,
     multi_label: bool = False,
     db: Session = Depends(get_session),
+    logger=None,
 ):
     file = db.get(FileRecord, file_id)
     if not file:
         return
     try:
-        chunked_sequence = chunk_text(
-            file.file_contents, chunking_strategy, chunk_size, overlap
-        )
+        chunks = chunk_text(file.file_contents)
+        grouped_chunks = group_similar_chunks(chunks)
+        chunks_by_token = []
+        for chunk in grouped_chunks:
+            chunks_by_token.extend(chunk_by_token(chunk))
         candidate_labels = [label.value for label in ClassificationLabel]
         results = {label: [] for label in candidate_labels}
         weights = {label: [] for label in candidate_labels}
-        classifier = get_classifier(multi_label)
-        for chunk in chunked_sequence:
-            result = classifier(chunk, candidate_labels)
+        for chunk in chunks_by_token:
+            result = zero_shot_classifier(chunk["text"], candidate_labels)
             for label, score in zip(result["labels"], result["scores"]):
                 results[label].append(score)
-                weights[label].append(len(chunk.split()))
+                weights[label].append(len(chunk["text"].split()))
 
         for label in candidate_labels:
             score = np.average(results[label], weights=weights[label])
@@ -169,8 +300,9 @@ def process_file(
                 )
             )
         file.status = "completed"
-    except Exception:
+    except Exception as err:
         file.status = "failed"
+        logger.exception(err)
     finally:
         file.updated_at = datetime.now(timezone.utc)
         db.add(file)

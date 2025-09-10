@@ -23,11 +23,14 @@ from ..models.file_model import (
     FileRecordWithClassifications,
     FileStatus,
 )
+import logging
 
 router = APIRouter(
     prefix="/files",
     tags=["files"],
 )
+
+logger = logging.getLogger("classifyinator")
 
 
 @router.get("/list", response_model=list[FileRecordWithClassifications])
@@ -57,11 +60,12 @@ async def process_file_request(
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_session),
 ):
-    if file_details.chunk_size <= file_details.overlap:
-        raise HTTPException(
-            status_code=400,
-            detail="Chunk size must be greater than overlap",
-        )
+    if file_details.chunking_strategy != ChunkingStrategy.paragraph:
+        if file_details.chunk_size <= file_details.overlap - 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Chunk size must be greater than overlap",
+            )
 
     # If it is called with the same params as before we will delete it
     statement = select(FileClassification).where(
@@ -86,6 +90,7 @@ async def process_file_request(
         file_details.overlap,
         file_details.multi_label,
         db,
+        logger,
     )
 
     return {"id": file_details.file_id, "status": FileStatus.processing}
@@ -165,6 +170,7 @@ async def upload_file(
             DEFAULT_OVERLAP,
             DEFAULT_MULTI_LABEL,
             db,
+            logger,
         )
         return {
             "id": file_record.id,
