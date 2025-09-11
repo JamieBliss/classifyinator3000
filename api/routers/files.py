@@ -18,7 +18,9 @@ import magic
 from ..database import get_session
 from ..models.file_model import (
     ChunkingStrategy,
+    FileClassificationChunk,
     FileClassification,
+    FileClassificationScore,
     FileRecord,
     FileRecordWithClassifications,
     FileStatus,
@@ -36,14 +38,7 @@ logger = logging.getLogger("classifyinator")
 @router.get("/list", response_model=list[FileRecordWithClassifications])
 def list_files(db: Session = Depends(get_session)):
     files = db.query(FileRecord).all()
-    for file in files:
-        file.classifications.sort(key=lambda x: x.classification_score, reverse=True)
     return files
-
-
-DEFAULT_CHUNK_SIZE = 200
-DEFAULT_OVERLAP = 50
-DEFAULT_MULTI_LABEL = False
 
 
 class ProcessFileRequest(BaseModel):
@@ -51,7 +46,7 @@ class ProcessFileRequest(BaseModel):
     chunking_strategy: ChunkingStrategy
     chunk_size: Optional[int] = None
     overlap: Optional[int] = None
-    multi_label: bool = DEFAULT_MULTI_LABEL
+    multi_label: bool = False
 
 
 @router.post("/process", response_model=FileRecord)
@@ -165,10 +160,10 @@ async def upload_file(
         background_tasks.add_task(
             process_file,
             file_record.id,
-            ChunkingStrategy.number,
-            DEFAULT_CHUNK_SIZE,
-            DEFAULT_OVERLAP,
-            DEFAULT_MULTI_LABEL,
+            ChunkingStrategy.paragraph,
+            None,
+            None,
+            False,
             db,
             logger,
         )
@@ -205,6 +200,25 @@ def delete_file(file_id: int, db: Session = Depends(get_session)):
 
     statement = select(FileClassification).where(FileClassification.file_id == file_id)
     file_classifications = db.exec(statement).all()
+
+    statement = select(FileClassificationChunk).where(
+        FileClassificationChunk.file_classification_id.in_(
+            [file_classification.id for file_classification in file_classifications]
+        )
+    )
+    file_classification_chunk = db.exec(statement).all()
+    for file_chunk_classification in file_classification_chunk:
+        db.delete(file_chunk_classification)
+
+    statement = select(FileClassificationScore).where(
+        FileClassificationScore.file_classification_id.in_(
+            [file_classification.id for file_classification in file_classifications]
+        )
+    )
+    file_classification_scores = db.exec(statement).all()
+    for file_classification_score in file_classification_scores:
+        db.delete(file_classification_score)
+
     for file_classification in file_classifications:
         db.delete(file_classification)
     statement = select(FileRecord).where(FileRecord.id == file_id)

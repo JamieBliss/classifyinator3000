@@ -13,6 +13,8 @@ from sqlmodel import Session
 from ..models.file_model import (
     ChunkingStrategy,
     ClassificationLabel,
+    FileClassificationChunk,
+    FileClassificationScore,
     FileClassification,
     FileRecord,
 )
@@ -229,7 +231,7 @@ def chunk_by_token(chunk: Dict, chunk_size=500) -> List[Dict]:
                     if count_tokens(subcandidate) > chunk_size:
                         chunks.append(
                             {
-                                "test": " ".join(word_current).strip(),
+                                "text": " ".join(word_current).strip(),
                                 "token_count": count_tokens(
                                     " ".join(word_current).strip()
                                 ),
@@ -241,13 +243,13 @@ def chunk_by_token(chunk: Dict, chunk_size=500) -> List[Dict]:
                 if word_current:
                     chunks.append(
                         {
-                            "test": " ".join(word_current).strip(),
+                            "text": " ".join(word_current).strip(),
                             "token_count": count_tokens(" ".join(word_current).strip()),
                         }
                     )
                 current = []
         else:
-            current.append({"text": sentence, "token_count": count_tokens(sentence)})
+            current.append(sentence)
 
     if current:
         chunks.append(
@@ -286,19 +288,37 @@ def process_file(
                 results[label].append(score)
                 weights[label].append(len(chunk["text"].split()))
 
+        file_classification = FileClassification(
+            file_id=file.id,
+            model=MODEL,
+            multi_label=multi_label,
+            chunking_strategy=chunking_strategy,
+            chunk_size=chunk_size,
+            chunk_overlap_size=overlap,
+        )
+        db.add(file_classification)
+        db.commit()
+        db.refresh(file_classification)
+
         for label in candidate_labels:
             score = np.average(results[label], weights=weights[label])
-            db.add(
-                FileClassification(
-                    file_id=file.id,
-                    classification=label,
-                    classification_score=score,
-                    multi_label=multi_label,
-                    chunking_strategy=chunking_strategy,
-                    chunk_size=chunk_size,
-                    chunk_overlap_size=overlap,
-                )
+
+            score_obj = FileClassificationScore(
+                file_classification_id=file_classification.id,
+                classification=label,
+                classification_score=score,
             )
+            db.add(score_obj)
+
+        for chunk in chunks_by_token:
+            chunk_obj = FileClassificationChunk(
+                file_classification_id=file_classification.id,
+                start=chunk.get("start", 0),
+                end=chunk.get("end", 0),
+                chunk=chunk["text"],
+            )
+            db.add(chunk_obj)
+
         file.status = "completed"
     except Exception as err:
         file.status = "failed"
