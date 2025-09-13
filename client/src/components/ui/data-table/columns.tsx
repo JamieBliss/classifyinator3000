@@ -33,6 +33,28 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
     },
   },
   {
+    accessorKey: 'model',
+    header: 'Model',
+    cell: ({ row }) => {
+      const status = row.getValue('status') as FileStatus
+
+      if (status === FileStatus.Processing) {
+        return <Skeleton className="h-[20px] w-[150px] rounded-full" />
+      }
+
+      const classifications = row.getValue(
+        'classifications',
+      ) as SchemaFileClassificationWithScoresAndChunks[]
+
+      if (classifications.length === 0) {
+        return <div>-</div>
+      }
+
+      const classification = classifications[0]
+      return <div>{classification.model}</div>
+    },
+  },
+  {
     accessorKey: 'classifications',
     id: 'classification_name',
     header: 'Classification',
@@ -63,7 +85,7 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
     enableSorting: true,
     cell: ({ row }) => {
       const status = row.getValue('status') as FileStatus
-      let classifications = row.getValue(
+      const classifications = row.getValue(
         'classifications',
       ) as SchemaFileClassificationWithScoresAndChunks[]
 
