@@ -7,6 +7,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { ClassificationChart } from '../classifications-chart'
 import { ProcessFileForm } from '../process-file-form'
+import { Button } from '../button'
 
 interface RowDialogProps {
   selectedRow: SchemaFileRecordWithClassifications | undefined
@@ -20,6 +21,18 @@ export const RowDialog = ({
   setIsRowDetailsDialogOpen,
   onFileUploadSuccess,
 }: RowDialogProps) => {
+  const apiUrl = import.meta.env.VITE_API_URL
+
+  const deleteFile = async (fileId: number) => {
+    const res = await fetch(`${apiUrl}/files/delete/${fileId}`, {
+      method: 'DELETE',
+    })
+
+    const json_response = await res.json()
+    if (json_response.status !== 200) {
+      setIsRowDetailsDialogOpen(false)
+    }
+  }
   return (
     <Dialog
       open={isRowDetailsDialogOpen}
@@ -44,6 +57,12 @@ export const RowDialog = ({
             />
           </>
         )}
+        <Button
+          onClick={() => deleteFile(selectedRow?.id as number)}
+          variant={'destructive'}
+        >
+          Delete File and Classifications
+        </Button>
       </DialogContent>
     </Dialog>
   )

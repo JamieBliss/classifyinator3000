@@ -51,7 +51,7 @@ The **Classifyinator3000**, is here!! A powerful tool for document classificatio
    pip install -r requirements.txt
    ```
 
-   You may need to install libmagic if you don't already, this is used to detect mimetypes and instructions to install for all OS's can be found [here](https://pypi.org/project/python-magic/)
+   You may need to install libmagic if you don't have it already, this is used to detect mimetypes and instructions to install for all OS's can be found [here](https://pypi.org/project/python-magic/)
 
 4. **Run the API**  
    Start the API server:

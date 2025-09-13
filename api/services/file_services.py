@@ -20,8 +20,6 @@ from ..models.file_model import (
     Models,
 )
 from fastapi import Depends, File
-from transformers import pipeline, AutoTokenizer
-from sentence_transformers import SentenceTransformer
 from ..database import get_session
 
 
@@ -82,29 +80,6 @@ def file_reader_factory(file_name: str) -> FileReaderInterface:
         return WordReader()
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
-
-
-MODEL = Models.comprehend_it_base.value
-
-
-def get_device():
-    if torch.cuda.is_available():
-        return "cuda:0"
-    else:
-        return "cpu"
-
-
-DEVICE = get_device()
-
-
-zero_shot_classifier = pipeline(
-    "zero-shot-classification",
-    model=MODEL,
-    devices=DEVICE,
-)
-
-tokenizer = AutoTokenizer.from_pretrained(MODEL, use_fast=True)
-embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
 def chunk_text(text: str):
