@@ -17,6 +17,7 @@ from ..models.file_model import (
     FileClassificationScore,
     FileClassification,
     FileRecord,
+    Models,
 )
 from fastapi import Depends, File
 from transformers import pipeline, AutoTokenizer
@@ -83,13 +84,7 @@ def file_reader_factory(file_name: str) -> FileReaderInterface:
         raise ValueError(f"Unsupported file type: {file_type}")
 
 
-MODELS = [
-    "facebook/bart-large-mnli",
-    "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
-    "knowledgator/comprehend_it-base",
-    "Qwen/Qwen3-Embedding-0.6B",
-]
-MODEL = MODELS[2]
+MODEL = Models.comprehend_it_base.value
 
 
 def get_device():
@@ -263,6 +258,7 @@ def chunk_by_token(chunk: Dict, chunk_size=500) -> List[Dict]:
 
 def process_file(
     file_id: int,
+    model: str,
     chunking_strategy: ChunkingStrategy,
     chunk_size: int,
     overlap: int,

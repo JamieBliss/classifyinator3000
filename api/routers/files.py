@@ -24,6 +24,7 @@ from ..models.file_model import (
     FileRecord,
     FileRecordWithClassifications,
     FileStatus,
+    Models,
 )
 import logging
 
@@ -43,6 +44,7 @@ def list_files(db: Session = Depends(get_session)):
 
 class ProcessFileRequest(BaseModel):
     file_id: int
+    model: Models
     chunking_strategy: ChunkingStrategy
     chunk_size: Optional[int] = None
     overlap: Optional[int] = None
@@ -64,6 +66,7 @@ async def process_file_request(
 
     # If it is called with the same params as before we will delete it
     statement = select(FileClassification).where(
+        FileClassification.model == file_details.model,
         FileClassification.file_id == file_details.file_id,
         FileClassification.chunking_strategy == file_details.chunking_strategy,
         FileClassification.chunk_size == file_details.chunk_size,
@@ -80,6 +83,7 @@ async def process_file_request(
     background_tasks.add_task(
         process_file,
         file_details.file_id,
+        file_details.model,
         file_details.chunking_strategy,
         file_details.chunk_size,
         file_details.overlap,

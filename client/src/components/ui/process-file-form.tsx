@@ -13,7 +13,11 @@ import { Checkbox } from './checkbox'
 import { Button } from './button'
 import { Collapsible, CollapsibleContent } from './collapsible'
 import { ChevronsUpDown } from 'lucide-react'
-import { useProcessFile, type ChunkTypes } from '@/hooks/use-process-file'
+import {
+  useProcessFile,
+  type ChunkTypes,
+  type Models,
+} from '@/hooks/use-process-file'
 
 interface ProcessFileFormProps {
   rowId: number
@@ -30,10 +34,12 @@ export const ProcessFileForm = ({
 }: ProcessFileFormProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(defaultIsOpen)
   const {
+    model,
     chunkType,
     chunkSize,
     chunkOverlapSize,
     multiLabel,
+    setModel,
     setChunkType,
     setChunkSize,
     setChunkOverlapSize,
@@ -69,6 +75,28 @@ export const ProcessFileForm = ({
           <form onSubmit={handleSubmit} className="grid gap-6 pt-6 w-full">
             <div className="flex flex-wrap items-end gap-4">
               <div className="grid gap-2">
+                <Label htmlFor="model">Model</Label>
+                <Select
+                  value={model}
+                  onValueChange={(value) => setModel(value as Models)}
+                >
+                  <SelectTrigger id="model">
+                    <SelectValue placeholder="Select a model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={'knowledgator/comprehend_it-base'}>
+                      knowledgator/comprehend_it-base
+                    </SelectItem>
+                    <SelectItem value={'facebook/bart-large-mnli'}>
+                      facebook/bart-large-mnli
+                    </SelectItem>
+                    <SelectItem value={'Qwen/Qwen3-Embedding-0.6B'}>
+                      Qwen/Qwen3-Embedding-0.6B
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="chunkType">Chunking Strategy</Label>
                 <Select
                   value={chunkType}
@@ -78,8 +106,10 @@ export const ProcessFileForm = ({
                     <SelectValue placeholder="Select a chunk type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={'Number'}>Number of tokens</SelectItem>
                     <SelectItem value={'Paragraph'}>By paragraph</SelectItem>
+                    <SelectItem value={'Number'} disabled>
+                      Number of tokens (not implemented yet)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

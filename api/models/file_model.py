@@ -11,6 +11,12 @@ class FileStatus(str, Enum):
     failed = "Failed"
 
 
+class Models(str, Enum):
+    bart_large_mnli = "facebook/bart-large-mnli"
+    comprehend_it_base = "knowledgator/comprehend_it-base"
+    qwen_embedding = "Qwen/Qwen3-Embedding-0.6B"
+
+
 class FileRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     filename: str
@@ -91,8 +97,8 @@ class FileClassificationWithScoresAndChunks(SQLModel):
     model: str
     multi_label: bool
     chunking_strategy: ChunkingStrategy
-    chunk_size: int
-    chunk_overlap_size: int
+    chunk_size: Optional[int]
+    chunk_overlap_size: Optional[int]
     created_at: datetime
     file_classification_scores: List[FileClassificationScore] = []
     file_classification_chunks: List[FileClassificationChunk] = []
