@@ -30,7 +30,28 @@ function App() {
       const response = await fetch(`${apiUrl}/files/list`)
       if (!response.ok) throw new Error('Failed to fetch file list')
       const files = await response.json()
-      setData(files)
+      const sortedFiles = files.map(
+        (file: SchemaFileRecordWithClassifications) => {
+          const sortedClassifications = file.classifications
+            .map((classification) => ({
+              ...classification,
+              file_classification_scores:
+                classification.file_classification_scores.sort(
+                  (a, b) => b.classification_score - a.classification_score,
+                ),
+            }))
+            .sort(
+              (a, b) =>
+                b.file_classification_scores[0].classification_score -
+                a.file_classification_scores[0].classification_score,
+            )
+          return {
+            ...file,
+            classifications: sortedClassifications,
+          }
+        },
+      )
+      setData(sortedFiles)
     } catch (error) {
       console.error('Error fetching file list:', error)
     }
