@@ -7,7 +7,8 @@ import {
 } from '@/components/ui/card'
 import type { ChartConfig } from '@/components/ui/chart'
 import type {
-  SchemaFileClassificationRead,
+  SchemaFileClassificationScore,
+  SchemaFileClassificationWithScoresAndChunks,
   SchemaFileRecordWithClassifications,
 } from '@/types/types'
 import { useEffect, useState } from 'react'
@@ -31,23 +32,21 @@ export function ClassificationChart({ row }: ClassificationChart) {
   }[]
 
   const classifications = row.classifications.reduce<
-    Record<string, SchemaFileClassificationRead[]>
+    Record<string, SchemaFileClassificationWithScoresAndChunks>
   >((acc, classification) => {
-    const key = `${classification.file_id}-${classification.multi_label}-${classification.chunking_strategy}-${classification.chunk_size}-${classification.chunk_overlap_size}`
+    const key = `${classification.model}-${classification.file_id}-${classification.multi_label}-${classification.chunking_strategy}-${classification.chunk_size}-${classification.chunk_overlap_size}`
 
-    if (!acc[key]) {
-      acc[key] = []
-    }
-
-    acc[key].push(classification)
+    acc[key] = classification
     return acc
   }, {})
+
+  console.log(classifications)
 
   const [selectedClassificationKey, setSelectedClassificationKey] = useState<
     string | null
   >(null)
   const [selectedClassification, setSelectedClassification] = useState<
-    SchemaFileClassificationRead[]
+    SchemaFileClassificationScore[]
   >([])
 
   const chartConfig: ChartConfig = selectedClassification.reduce(
@@ -67,20 +66,26 @@ export function ClassificationChart({ row }: ClassificationChart) {
   useEffect(() => {
     // by default we display the highest classification score so we should show the corresponding chart
     const highestClassification = row.classifications[0]
-    const highestClassificationKey = `${highestClassification.file_id}-${highestClassification.multi_label}-${highestClassification.chunking_strategy}-${highestClassification.chunk_size}-${highestClassification.chunk_overlap_size}`
+    const highestClassificationKey = `${highestClassification.model}-${highestClassification.file_id}-${highestClassification.multi_label}-${highestClassification.chunking_strategy}-${highestClassification.chunk_size}-${highestClassification.chunk_overlap_size}`
     setSelectedClassificationKey(highestClassificationKey)
-    setSelectedClassification(classifications[highestClassificationKey])
+    setSelectedClassification(
+      classifications[highestClassificationKey].file_classification_scores,
+    )
   }, [])
 
   useEffect(() => {
     if (!selectedClassificationKey) return
-    setSelectedClassification(classifications[selectedClassificationKey])
+    setSelectedClassification(
+      classifications[selectedClassificationKey].file_classification_scores,
+    )
     const newSelectedClassification = classifications[selectedClassificationKey]
-    const newData = newSelectedClassification.map((classificationData) => ({
-      classification: classificationData.id.toString(),
-      score: classificationData.classification_score * 100,
-      fill: `var(--color-${classificationData.id})`,
-    }))
+    const newData = newSelectedClassification.file_classification_scores.map(
+      (classificationData) => ({
+        classification: classificationData.id.toString(),
+        score: classificationData.classification_score * 100,
+        fill: `var(--color-${classificationData.id})`,
+      }),
+    )
     setChartData(newData)
   }, [selectedClassificationKey])
 
@@ -95,7 +100,7 @@ export function ClassificationChart({ row }: ClassificationChart) {
         <CardDescription>{createdAtDate}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
-        {selectedClassification[0]?.multi_label ? (
+        {false ? (
           <ClassificationBarChart
             chartConfig={chartConfig}
             chartData={chartData}
@@ -114,6 +119,8 @@ export function ClassificationChart({ row }: ClassificationChart) {
                 <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
               </TooltipTrigger>
               <TooltipContent>
+                model: model name
+                <br />
                 cstrat: chunking strategy
                 <br />
                 cs: chunk size
@@ -138,10 +145,11 @@ export function ClassificationChart({ row }: ClassificationChart) {
                   chunking_strategy,
                   chunk_size,
                   chunk_overlap_size,
-                } = classifications[key][0]
+                } = classifications[key]
                 return (
                   <SelectItem key={key} value={key}>
-                    cstrat: {chunking_strategy}, cs: {chunk_size || 'N/A'}, co:{' '}
+                    model: {classifications[key].model}, cstrat:{' '}
+                    {chunking_strategy}, cs: {chunk_size || 'N/A'}, co:{' '}
                     {chunk_overlap_size || 'N/A'}, ml:{' '}
                     {multi_label === true ? 'true' : 'false'}
                   </SelectItem>
