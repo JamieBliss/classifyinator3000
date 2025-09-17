@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 import io
 import re
 from typing import Dict, List
-
+from celery.utils.log import get_task_logger
+from ..celery_app import celery_app, get_model_pipeline, get_embed_model, get_tokenizer
 import numpy as np
 import PyPDF2
 from docx import Document
@@ -19,7 +20,8 @@ from ..models.file_model import (
 )
 from fastapi import File
 from ..database import engine
-from ..models_cache import get_embed_model, get_model_pipeline, get_tokenizer
+
+task_logger = get_task_logger(__name__)
 
 
 class FileReaderInterface:
@@ -130,14 +132,14 @@ def group_similar_chunks(chunks: List[Dict], similarity_threshold: float = 0.85)
     return grouped_chunks
 
 
-def split_large_paragraph(paragraph: str, max_tokens: int):
+def split_large_paragraph(model_name: str, paragraph: str, max_tokens: int):
     """Split a paragraph into subchunks under max_tokens."""
     sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", paragraph) if s.strip()]
     chunks, current = [], []
 
     for sent in sentences:
         candidate = " ".join(current + [sent]).strip()
-        if count_tokens(candidate) > max_tokens:
+        if count_tokens(model_name, candidate) > max_tokens:
             if current:
                 chunks.append(" ".join(current).strip())
                 current = [sent]
@@ -147,7 +149,7 @@ def split_large_paragraph(paragraph: str, max_tokens: int):
                 subcurrent = []
                 for w in words:
                     subcandidate = " ".join(subcurrent + [w])
-                    if count_tokens(subcandidate) > max_tokens:
+                    if count_tokens(model_name, subcandidate) > max_tokens:
                         chunks.append(" ".join(subcurrent))
                         subcurrent = [w]
                     else:
@@ -233,7 +235,7 @@ def chunk_by_token(model_name: str, chunk: Dict, chunk_size=500) -> List[Dict]:
         )
     return chunks
 
-
+@celery_app.task
 def process_file(
     file_id: int,
     model: str,
@@ -241,13 +243,11 @@ def process_file(
     chunk_size: int,
     overlap: int,
     multi_label: bool = False,
-    logger=None,
 ):
     with Session(engine) as db:
         file = db.get(FileRecord, file_id)
         if not file:
-            if logger:
-                logger.error(f"File with id {file_id} not found for processing.")
+            task_logger.error(f"File with id {file_id} not found for processing.")
             return
         try:
             chunks = chunk_text(file.file_contents)
@@ -301,8 +301,7 @@ def process_file(
             db.commit()
         except Exception as err:
             db.rollback()
-            if logger:
-                logger.exception(err)
+            task_logger.exception(err)
             file_to_fail = db.get(FileRecord, file_id)
             if file_to_fail:
                 file_to_fail.status = "failed"

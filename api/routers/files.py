@@ -7,7 +7,6 @@ from fastapi import (
     File,
     UploadFile,
     HTTPException,
-    BackgroundTasks,
     Body,
 )
 from ..services.file_services import process_file
@@ -54,7 +53,6 @@ class ProcessFileRequest(BaseModel):
 @router.post("/process", response_model=FileRecord)
 async def process_file_request(
     file_details: ProcessFileRequest = Body(...),
-    background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_session),
 ):
     if file_details.chunking_strategy != ChunkingStrategy.paragraph:
@@ -80,15 +78,13 @@ async def process_file_request(
     file_record.status = FileStatus.processing
     db.add(file_record)
     db.commit()
-    background_tasks.add_task(
-        process_file,
+    process_file.delay(
         file_details.file_id,
         file_details.model.value,
         file_details.chunking_strategy,
         file_details.chunk_size,
         file_details.overlap,
         file_details.multi_label,
-        logger,
     )
 
     return {"id": file_details.file_id, "status": FileStatus.processing}
@@ -125,7 +121,6 @@ async def upload_file(
     file: UploadFile = File(...),
     override: bool = False,
     db: Session = Depends(get_session),
-    background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     # check if file exists in db
     statement = select(FileRecord).where(FileRecord.filename == file.filename)
@@ -160,15 +155,13 @@ async def upload_file(
 
         db.commit()
         db.refresh(file_record)
-        background_tasks.add_task(
-            process_file,
+        process_file.delay(
             file_record.id,
             Models.comprehend_it_base.value,
             ChunkingStrategy.paragraph,
             None,
             None,
             False,
-            logger,
         )
         return {
             "id": file_record.id,
