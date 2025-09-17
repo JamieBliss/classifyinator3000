@@ -83,12 +83,11 @@ async def process_file_request(
     background_tasks.add_task(
         process_file,
         file_details.file_id,
-        file_details.model,
+        file_details.model.value,
         file_details.chunking_strategy,
         file_details.chunk_size,
         file_details.overlap,
         file_details.multi_label,
-        db,
         logger,
     )
 
@@ -164,11 +163,11 @@ async def upload_file(
         background_tasks.add_task(
             process_file,
             file_record.id,
+            Models.comprehend_it_base.value,
             ChunkingStrategy.paragraph,
             None,
             None,
             False,
-            db,
             logger,
         )
         return {

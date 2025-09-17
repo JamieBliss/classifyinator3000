@@ -4,7 +4,6 @@ import io
 import re
 from typing import Dict, List
 
-import torch
 import numpy as np
 import PyPDF2
 from docx import Document
@@ -17,10 +16,10 @@ from ..models.file_model import (
     FileClassificationScore,
     FileClassification,
     FileRecord,
-    Models,
 )
-from fastapi import Depends, File
-from ..database import get_session
+from fastapi import File
+from ..database import engine
+from ..models_cache import get_embed_model, get_model_pipeline, get_tokenizer
 
 
 class FileReaderInterface:
@@ -105,7 +104,7 @@ def chunk_text(text: str):
 
 def group_similar_chunks(chunks: List[Dict], similarity_threshold: float = 0.85):
     text = [chunk["text"] for chunk in chunks]
-    embeddings = embed_model.encode(text, normalize_embeddings=True)
+    embeddings = get_embed_model().encode(text, normalize_embeddings=True)
 
     grouped_chunks = []
     i = 0
@@ -164,13 +163,13 @@ def split_large_paragraph(paragraph: str, max_tokens: int):
     return chunks
 
 
-def count_tokens(text: str):
-    return len(tokenizer.encode(text, add_special_tokens=False))
+def count_tokens(model_name: str, text: str):
+    return len(get_tokenizer(model_name).encode(text, add_special_tokens=False))
 
 
-def chunk_by_token(chunk: Dict, chunk_size=500) -> List[Dict]:
+def chunk_by_token(model_name: str, chunk: Dict, chunk_size=500) -> List[Dict]:
     # Need to think about overlap and when to do it
-    token_count = count_tokens(chunk["text"])
+    token_count = count_tokens(model_name, chunk["text"])
     if token_count <= chunk_size:
         return [{**chunk, "token_count": token_count}]
 
@@ -183,12 +182,14 @@ def chunk_by_token(chunk: Dict, chunk_size=500) -> List[Dict]:
     chunks, current = [], []
     for sentence in sentences:
         candidate = " ".join(current + [sentence]).strip()
-        if count_tokens(candidate) > chunk_size:
+        if count_tokens(model_name, candidate) > chunk_size:
             if current:
                 chunks.append(
                     {
                         "text": " ".join(current).strip(),
-                        "token_count": count_tokens(" ".join(current).strip()),
+                        "token_count": count_tokens(
+                            model_name, " ".join(current).strip()
+                        ),
                     }
                 )
                 current = [sentence]
@@ -198,12 +199,12 @@ def chunk_by_token(chunk: Dict, chunk_size=500) -> List[Dict]:
                 word_current = []
                 for word in words:
                     subcandidate = " ".join(word_current + [word])
-                    if count_tokens(subcandidate) > chunk_size:
+                    if count_tokens(model_name, subcandidate) > chunk_size:
                         chunks.append(
                             {
                                 "text": " ".join(word_current).strip(),
                                 "token_count": count_tokens(
-                                    " ".join(word_current).strip()
+                                    model_name, " ".join(word_current).strip()
                                 ),
                             }
                         )
@@ -214,7 +215,9 @@ def chunk_by_token(chunk: Dict, chunk_size=500) -> List[Dict]:
                     chunks.append(
                         {
                             "text": " ".join(word_current).strip(),
-                            "token_count": count_tokens(" ".join(word_current).strip()),
+                            "token_count": count_tokens(
+                                model_name, " ".join(word_current).strip()
+                            ),
                         }
                     )
                 current = []
@@ -225,7 +228,7 @@ def chunk_by_token(chunk: Dict, chunk_size=500) -> List[Dict]:
         chunks.append(
             {
                 "text": " ".join(current).strip(),
-                "token_count": count_tokens(" ".join(current).strip()),
+                "token_count": count_tokens(model_name, " ".join(current).strip()),
             }
         )
     return chunks
@@ -238,63 +241,71 @@ def process_file(
     chunk_size: int,
     overlap: int,
     multi_label: bool = False,
-    db: Session = Depends(get_session),
     logger=None,
 ):
-    file = db.get(FileRecord, file_id)
-    if not file:
-        return
-    try:
-        chunks = chunk_text(file.file_contents)
-        grouped_chunks = group_similar_chunks(chunks)
-        chunks_by_token = []
-        for chunk in grouped_chunks:
-            chunks_by_token.extend(chunk_by_token(chunk))
-        candidate_labels = [label.value for label in ClassificationLabel]
-        results = {label: [] for label in candidate_labels}
-        weights = {label: [] for label in candidate_labels}
-        for chunk in chunks_by_token:
-            result = zero_shot_classifier(chunk["text"], candidate_labels)
-            for label, score in zip(result["labels"], result["scores"]):
-                results[label].append(score)
-                weights[label].append(len(chunk["text"].split()))
+    with Session(engine) as db:
+        file = db.get(FileRecord, file_id)
+        if not file:
+            if logger:
+                logger.error(f"File with id {file_id} not found for processing.")
+            return
+        try:
+            chunks = chunk_text(file.file_contents)
+            grouped_chunks = group_similar_chunks(chunks)
+            chunks_by_token = []
+            for chunk in grouped_chunks:
+                chunks_by_token.extend(chunk_by_token(model, chunk))
+            candidate_labels = [label.value for label in ClassificationLabel]
+            results = {label: [] for label in candidate_labels}
+            weights = {label: [] for label in candidate_labels}
+            for chunk in chunks_by_token:
+                result = get_model_pipeline(model)(chunk["text"], candidate_labels)
+                for label, score in zip(result["labels"], result["scores"]):
+                    results[label].append(score)
+                    weights[label].append(len(chunk["text"].split()))
 
-        file_classification = FileClassification(
-            file_id=file.id,
-            model=MODEL,
-            multi_label=multi_label,
-            chunking_strategy=chunking_strategy,
-            chunk_size=chunk_size,
-            chunk_overlap_size=overlap,
-        )
-        db.add(file_classification)
-        db.commit()
-        db.refresh(file_classification)
-
-        for label in candidate_labels:
-            score = np.average(results[label], weights=weights[label])
-
-            score_obj = FileClassificationScore(
-                file_classification_id=file_classification.id,
-                classification=label,
-                classification_score=score,
+            file_classification = FileClassification(
+                file_id=file.id,
+                model=model,
+                multi_label=multi_label,
+                chunking_strategy=chunking_strategy,
+                chunk_size=chunk_size,
+                chunk_overlap_size=overlap,
             )
-            db.add(score_obj)
+            db.add(file_classification)
+            db.commit()
+            db.refresh(file_classification)
 
-        for chunk in chunks_by_token:
-            chunk_obj = FileClassificationChunk(
-                file_classification_id=file_classification.id,
-                start=chunk.get("start", 0),
-                end=chunk.get("end", 0),
-                chunk=chunk["text"],
-            )
-            db.add(chunk_obj)
+            for label in candidate_labels:
+                score = np.average(results[label], weights=weights[label])
 
-        file.status = "completed"
-    except Exception as err:
-        file.status = "failed"
-        logger.exception(err)
-    finally:
-        file.updated_at = datetime.now(timezone.utc)
-        db.add(file)
-        db.commit()
+                score_obj = FileClassificationScore(
+                    file_classification_id=file_classification.id,
+                    classification=label,
+                    classification_score=score,
+                )
+                db.add(score_obj)
+
+            for chunk in chunks_by_token:
+                chunk_obj = FileClassificationChunk(
+                    file_classification_id=file_classification.id,
+                    start=chunk.get("start", 0),
+                    end=chunk.get("end", 0),
+                    chunk=chunk["text"],
+                )
+                db.add(chunk_obj)
+
+            file.status = "completed"
+            file.updated_at = datetime.now(timezone.utc)
+            db.add(file)
+            db.commit()
+        except Exception as err:
+            db.rollback()
+            if logger:
+                logger.exception(err)
+            file_to_fail = db.get(FileRecord, file_id)
+            if file_to_fail:
+                file_to_fail.status = "failed"
+                file_to_fail.updated_at = datetime.now(timezone.utc)
+                db.add(file_to_fail)
+                db.commit()
