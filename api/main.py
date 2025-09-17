@@ -41,7 +41,7 @@ def preload_embed_model():
 @celery_app.task
 def preload_tokenizer():
     for model in Models:
-        get_tokenizer(model)
+        get_tokenizer(model.value)
 
 
 @app.on_event("startup")
