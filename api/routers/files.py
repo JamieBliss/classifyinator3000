@@ -74,10 +74,15 @@ async def process_file_request(
     classifications = db.exec(statement).all()
     for classification in classifications:
         db.delete(classification)
+
     file_record = db.get(FileRecord, file_details.file_id)
+    if not file_record:
+        raise HTTPException(status_code=404, detail=f"File with id {file_details.file_id} not found")
+
     file_record.status = FileStatus.processing
     db.add(file_record)
     db.commit()
+    db.refresh(file_record)
     process_file.delay(
         file_details.file_id,
         file_details.model.value,
@@ -87,7 +92,7 @@ async def process_file_request(
         file_details.multi_label,
     )
 
-    return {"id": file_details.file_id, "status": FileStatus.processing}
+    return file_record
 
 
 ALLOWED_MIME_TYPES = [
@@ -163,11 +168,7 @@ async def upload_file(
             None,
             False,
         )
-        return {
-            "id": file_record.id,
-            "status": file_record.status,
-            "message": "File uploaded successfully!",
-        }
+        return file_record
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
