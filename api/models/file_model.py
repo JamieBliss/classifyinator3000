@@ -59,10 +59,12 @@ class FileClassification(SQLModel, table=True):
     )
     file: Optional[FileRecord] = Relationship(back_populates="classifications")
     file_classification_scores: List["FileClassificationScore"] = Relationship(
-        back_populates="file_classification"
+        back_populates="file_classification",
+        sa_relationship_kwargs={"cascade": "all, delete, delete-orphan"}
     )
     file_classification_chunks: List["FileClassificationChunk"] = Relationship(
-        back_populates="file_classification"
+        back_populates="file_classification",
+        sa_relationship_kwargs={"cascade": "all, delete, delete-orphan"}
     )
 
 

@@ -9,6 +9,7 @@ import numpy as np
 import PyPDF2
 from docx import Document
 from sqlmodel import Session
+from functools import lru_cache
 
 from ..models.file_model import (
     ChunkingStrategy,
@@ -17,6 +18,7 @@ from ..models.file_model import (
     FileClassificationScore,
     FileClassification,
     FileRecord,
+    FileStatus
 )
 from fastapi import File
 from ..database import engine
@@ -104,9 +106,9 @@ def chunk_text(text: str):
     return chunks
 
 
-def group_similar_chunks(chunks: List[Dict], similarity_threshold: float = 0.85):
+def group_similar_chunks(chunks: List[Dict], similarity_threshold: float = 0.8):
     text = [chunk["text"] for chunk in chunks]
-    embeddings = get_embed_model().encode(text, normalize_embeddings=True)
+    embeddings = get_embed_model().encode(text, normalize_embeddings=True, batch_size=32)
 
     grouped_chunks = []
     i = 0
@@ -164,7 +166,7 @@ def split_large_paragraph(model_name: str, paragraph: str, max_tokens: int):
         chunks.append(" ".join(current).strip())
     return chunks
 
-
+@lru_cache(maxsize=10000)
 def count_tokens(model_name: str, text: str):
     return len(get_tokenizer(model_name).encode(text, add_special_tokens=False))
 
@@ -304,7 +306,7 @@ def process_file(
                 )
                 db.add(chunk_obj)
 
-            file.status = "completed"
+            file.status = FileStatus.completed 
             file.updated_at = datetime.now(timezone.utc)
             db.add(file)
             db.commit()
@@ -313,7 +315,7 @@ def process_file(
             task_logger.exception(err)
             file_to_fail = db.get(FileRecord, file_id)
             if file_to_fail:
-                file_to_fail.status = "failed"
+                file_to_fail.status = FileStatus.failed
                 file_to_fail.updated_at = datetime.now(timezone.utc)
                 db.add(file_to_fail)
                 db.commit()

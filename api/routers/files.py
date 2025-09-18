@@ -198,24 +198,6 @@ def delete_file(file_id: int, db: Session = Depends(get_session)):
     statement = select(FileClassification).where(FileClassification.file_id == file_id)
     file_classifications = db.exec(statement).all()
 
-    statement = select(FileClassificationChunk).where(
-        FileClassificationChunk.file_classification_id.in_(
-            [file_classification.id for file_classification in file_classifications]
-        )
-    )
-    file_classification_chunk = db.exec(statement).all()
-    for file_chunk_classification in file_classification_chunk:
-        db.delete(file_chunk_classification)
-
-    statement = select(FileClassificationScore).where(
-        FileClassificationScore.file_classification_id.in_(
-            [file_classification.id for file_classification in file_classifications]
-        )
-    )
-    file_classification_scores = db.exec(statement).all()
-    for file_classification_score in file_classification_scores:
-        db.delete(file_classification_score)
-
     for file_classification in file_classifications:
         db.delete(file_classification)
     statement = select(FileRecord).where(FileRecord.id == file_id)
