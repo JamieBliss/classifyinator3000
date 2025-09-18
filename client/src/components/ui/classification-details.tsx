@@ -22,7 +22,7 @@ export const ClassificationDetails = ({
       <div className="flex items-center justify-between gap-2">
         <div>
           <h3 className="text-lg font-medium">Classification File Details</h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground pb-1">
             A deep dive into the file processing and classifications
           </p>
         </div>
