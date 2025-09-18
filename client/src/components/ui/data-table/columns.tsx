@@ -19,7 +19,11 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
     accessorKey: 'filename',
     enableSorting: true,
     enableColumnFilter: true,
-    cell: ({ row }) => <div>{row.getValue('filename')}</div>,
+    cell: ({ row }) => (
+      <div className="max-w-[400px] overflow-hidden text-ellipsis">
+        {row.getValue('filename')}
+      </div>
+    ),
     header: ({ column }) => {
       return (
         <Button
