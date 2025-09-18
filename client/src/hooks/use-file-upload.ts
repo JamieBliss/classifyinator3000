@@ -55,7 +55,7 @@ export function useFileUpload({
       const result = await response.json()
       if (response.ok) {
         setUploadStatus('success')
-        setMessage(result.message ?? 'File uploaded successfully!')
+        setMessage('File uploaded successfully!')
         setSelectedFile(null) // Clear the file on successful upload
         onFileUploadSuccess(result.id)
         setIsDialogOpen(false)
@@ -63,7 +63,7 @@ export function useFileUpload({
         setIsFileConflictDialogOpen(true)
       } else {
         setUploadStatus('error')
-        setMessage(result.message ?? 'An unknown error occurred.')
+        setMessage(result.detail ?? 'An unknown error occurred.')
         console.error('Upload failed:', result)
       }
     } catch (error) {
@@ -97,4 +97,3 @@ export function useFileUpload({
     setIsFileConflictDialogOpen,
   }
 }
-
