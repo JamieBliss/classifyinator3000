@@ -4,6 +4,7 @@ import { ChevronsUpDown } from 'lucide-react'
 import { Collapsible, CollapsibleContent } from './collapsible'
 import type { useClassificationData } from '@/hooks/use-classification-data'
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 type ClassificationData = ReturnType<typeof useClassificationData>
 
@@ -38,7 +39,7 @@ export const ClassificationDetails = ({
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleContent>
           {selectedClassification ? (
-            <div>
+            <ScrollArea className="h-[400px] rounded-md border p-4 bg-muted/50">
               {selectedClassification.file_classification_chunks.map(
                 (chunk) => {
                   const chartColor = chunk.chunk_classification_label
@@ -47,8 +48,10 @@ export const ClassificationDetails = ({
                   return (
                     <div
                       key={chunk.id}
-                      className={`font-mono text-sm py-1 px-2 text-white my-2 w-fit rounded-md`}
-                      style={{ backgroundColor: `var(--chart-${chartColor})` }}
+                      className={`font-mono text-sm py-1 px-2 text-white my-2 w-fit rounded-md bg-secondary border-l-6`}
+                      style={{
+                        borderLeftColor: `var(--chart-${chartColor})`,
+                      }}
                     >
                       <Tooltip>
                         <TooltipTrigger className="text-left">
@@ -76,7 +79,7 @@ export const ClassificationDetails = ({
                   )
                 },
               )}
-            </div>
+            </ScrollArea>
           ) : (
             <div className="mt-4">No classification selected.</div>
           )}
