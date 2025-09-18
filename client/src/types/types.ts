@@ -114,22 +114,25 @@ export interface components {
     /** FileClassificationChunk */
     FileClassificationChunk: {
       /** Id */
-      id?: number | null
+      id: number
       /** File Classification Id */
-      file_classification_id?: number | null
+      file_classification_id: number
       /** Start */
       start: number
       /** End */
       end: number
       /** Chunk */
       chunk: string
+      chunk_classification_label: components['schemas']['ClassificationLabel']
+      /** Chunk Classification Score */
+      chunk_classification_score: number
     }
     /** FileClassificationScore */
     FileClassificationScore: {
       /** Id */
       id: number
       /** File Classification Id */
-      file_classification_id?: number | null
+      file_classification_id: number
       /** Classification Score */
       classification_score: number
       classification: components['schemas']['ClassificationLabel']
@@ -146,24 +149,18 @@ export interface components {
       multi_label: boolean
       chunking_strategy: components['schemas']['ChunkingStrategy']
       /** Chunk Size */
-      chunk_size: number
+      chunk_size: number | null
       /** Chunk Overlap Size */
-      chunk_overlap_size: number
+      chunk_overlap_size: number | null
       /**
        * Created At
        * Format: date-time
        */
       created_at: string
-      /**
-       * File Classification Scores
-       * @default []
-       */
-      file_classification_scores: SchemaFileClassificationScore[]
-      /**
-       * File Classification Chunks
-       * @default []
-       */
-      file_classification_chunks: SchemaFileClassificationChunk[]
+      /** File Classification Scores */
+      file_classification_scores: components['schemas']['FileClassificationScore'][]
+      /** File Classification Chunks */
+      file_classification_chunks: components['schemas']['FileClassificationChunk'][]
     }
     /** FileRecord */
     FileRecord: {
@@ -203,11 +200,8 @@ export interface components {
        * Format: date-time
        */
       updated_at: string
-      /**
-       * Classifications
-       * @default []
-       */
-      classifications: components['schemas']['FileClassificationWithScoresAndChunks'][]
+      /** Classifications */
+      classifications?: components['schemas']['FileClassificationWithScoresAndChunks'][]
     }
     /**
      * FileStatus
@@ -219,10 +213,16 @@ export interface components {
       /** Detail */
       detail?: components['schemas']['ValidationError'][]
     }
+    /**
+     * Models
+     * @enum {string}
+     */
+    Models: Models
     /** ProcessFileRequest */
     ProcessFileRequest: {
       /** File Id */
       file_id: number
+      model: components['schemas']['Models']
       chunking_strategy: components['schemas']['ChunkingStrategy']
       /** Chunk Size */
       chunk_size?: number | null
@@ -267,6 +267,7 @@ export type SchemaFileRecordWithClassifications =
 export type SchemaFileStatus = components['schemas']['FileStatus']
 export type SchemaHttpValidationError =
   components['schemas']['HTTPValidationError']
+export type SchemaModels = components['schemas']['Models']
 export type SchemaProcessFileRequest =
   components['schemas']['ProcessFileRequest']
 export type SchemaValidationError = components['schemas']['ValidationError']
@@ -440,4 +441,9 @@ export enum FileStatus {
   Processing = 'Processing',
   Completed = 'Completed',
   Failed = 'Failed',
+}
+export enum Models {
+  facebook_bart_large_mnli = 'facebook/bart-large-mnli',
+  knowledgator_comprehend_it_base = 'knowledgator/comprehend_it-base',
+  Qwen_Qwen3_Embedding_0_6B = 'Qwen/Qwen3-Embedding-0.6B',
 }

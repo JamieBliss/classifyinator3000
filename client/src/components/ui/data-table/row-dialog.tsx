@@ -5,9 +5,11 @@ import {
 import { Dialog, DialogContent, DialogTitle } from '../dialog'
 import type { Dispatch, SetStateAction } from 'react'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
-import { ClassificationChart } from '../classifications-chart'
+import { ClassificationChart } from '../classification-charts/classification-charts'
 import { ProcessFileForm } from '../process-file-form'
 import { Button } from '../button'
+import { useClassificationData } from '@/hooks/use-classification-data'
+import { ClassificationDetails } from '../classification-details'
 
 interface RowDialogProps {
   selectedRow: SchemaFileRecordWithClassifications | undefined
@@ -21,6 +23,7 @@ export const RowDialog = ({
   setIsRowDetailsDialogOpen,
   onFileUploadSuccess,
 }: RowDialogProps) => {
+  const classificationData = useClassificationData(selectedRow)
   const apiUrl = import.meta.env.VITE_API_URL
 
   const deleteFile = async (fileId: number) => {
@@ -45,7 +48,13 @@ export const RowDialog = ({
         {selectedRow && (
           <>
             {selectedRow.status !== FileStatus.Failed ? (
-              <ClassificationChart row={selectedRow} />
+              <>
+                <ClassificationChart
+                  row={selectedRow}
+                  {...classificationData}
+                />
+                <ClassificationDetails {...classificationData} />
+              </>
             ) : (
               <></>
             )}
