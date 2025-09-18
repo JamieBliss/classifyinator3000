@@ -86,6 +86,8 @@ class FileClassificationChunk(SQLModel, table=True):
     start: int
     end: int
     chunk: str
+    chunk_classification_label: ClassificationLabel
+    chunk_classification_score: float
     file_classification: Optional[FileClassification] = Relationship(
         back_populates="file_classification_chunks"
     )

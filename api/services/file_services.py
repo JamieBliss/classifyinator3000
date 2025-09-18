@@ -260,9 +260,16 @@ def process_file(
             weights = {label: [] for label in candidate_labels}
             for chunk in chunks_by_token:
                 result = get_model_pipeline(model)(chunk["text"], candidate_labels)
+                max_chunk_classification = {
+                    "label": result["labels"][0],
+                    "score": result["scores"][0],
+                }
                 for label, score in zip(result["labels"], result["scores"]):
+                    if score > max_chunk_classification["score"]:
+                        max_chunk_classification = {"label": label, "score": score}
                     results[label].append(score)
                     weights[label].append(len(chunk["text"].split()))
+                chunk["chunk_classification"] = max_chunk_classification
 
             file_classification = FileClassification(
                 file_id=file.id,
@@ -292,6 +299,8 @@ def process_file(
                     start=chunk.get("start", 0),
                     end=chunk.get("end", 0),
                     chunk=chunk["text"],
+                    chunk_classification_score=chunk["chunk_classification"]["score"],
+                    chunk_classification_label=chunk["chunk_classification"]["label"],
                 )
                 db.add(chunk_obj)
 
