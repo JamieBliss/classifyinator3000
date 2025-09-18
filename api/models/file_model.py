@@ -100,8 +100,8 @@ class FileClassificationWithScoresAndChunks(SQLModel):
     chunk_size: Optional[int]
     chunk_overlap_size: Optional[int]
     created_at: datetime
-    file_classification_scores: List[FileClassificationScore] = []
-    file_classification_chunks: List[FileClassificationChunk] = []
+    file_classification_scores: List[FileClassificationScore] = Field(default_factory=list)
+    file_classification_chunks: List[FileClassificationChunk] = Field(default_factory=list)
 
 
 class FileRecordWithClassifications(SQLModel):
@@ -111,4 +111,4 @@ class FileRecordWithClassifications(SQLModel):
     status: FileStatus
     created_at: datetime
     updated_at: datetime
-    classifications: List[FileClassificationWithScoresAndChunks] = []
+    classifications: List[FileClassificationWithScoresAndChunks] = Field(default_factory=list)
