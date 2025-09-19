@@ -15,6 +15,7 @@ class Models(str, Enum):
     bart_large_mnli = "facebook/bart-large-mnli"
     comprehend_it_base = "knowledgator/comprehend_it-base"
     qwen_embedding = "Qwen/Qwen3-Embedding-0.6B"
+    e5_large = "intfloat/multilingual-e5-large-instruct"
 
 
 class FileRecord(SQLModel, table=True):

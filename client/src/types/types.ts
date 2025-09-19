@@ -446,4 +446,5 @@ export enum Models {
   facebook_bart_large_mnli = 'facebook/bart-large-mnli',
   knowledgator_comprehend_it_base = 'knowledgator/comprehend_it-base',
   Qwen_Qwen3_Embedding_0_6B = 'Qwen/Qwen3-Embedding-0.6B',
+  E5_large_v2 = 'intfloat/multilingual-e5-large-instruct',
 }
