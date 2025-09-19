@@ -286,7 +286,7 @@ def process_file(
             results = {label: [] for label in candidate_labels}
             weights = {label: [] for label in candidate_labels}
             for chunk in chunks_by_token:
-                result = get_model_pipeline(model)(chunk["text"], candidate_labels)
+                result = get_model_pipeline(model, multi_label)(chunk["text"], candidate_labels)
                 max_chunk_classification = {
                     "label": result["labels"][0],
                     "score": result["scores"][0],

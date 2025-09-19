@@ -21,12 +21,12 @@ def get_device():
         return "cpu"
 
 
-@lru_cache(maxsize=3)
-def get_model_pipeline(model_name):
+@lru_cache(maxsize=6)
+def get_model_pipeline(model_name, multi_label=False):
     print(f"Loading model {model_name}")
     device = get_device()
     print(f"Using device {device}")
-    return pipeline("zero-shot-classification", model=model_name, device=device)
+    return pipeline("zero-shot-classification", model=model_name, device=device, multi_label=multi_label)
 
 
 @lru_cache(maxsize=3)
@@ -48,5 +48,6 @@ def preload_models_for_worker(**kwargs):
     # Preload the classification models and their tokenizers
     for model in Models:
         get_model_pipeline(model.value)
+        get_model_pipeline(model.value, True)
         get_tokenizer(model.value)
     print("Models preloaded successfully for Celery worker.")
