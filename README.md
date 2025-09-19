@@ -71,16 +71,10 @@ The **Classifyinator3000**, is here!! A powerful tool for document classificatio
    ```
 
 6. **Start Celery Worker**
-   Because I am on windows I had to use the command below to start the celery worker. It is due to the fact that the default uses `prefork` and windows doesn't support that. **Please note that this has to be ran from the root directory, not inside /api**
+   Because I am on windows I had to use the command below to start the celery worker. **Please note that this has to be ran from the root directory, not inside /api**
 
    ```
    celery -A api.celery_app worker --pool=threads --concurrency=8 --loglevel=info
-   ```
-
-   However if you are on Linux you should be able to use this
-
-   ```
-   celery -A api.celery_app worker --loglevel=info
    ```
 
 7. **Run the API**  
