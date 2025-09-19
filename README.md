@@ -53,13 +53,51 @@ The **Classifyinator3000**, is here!! A powerful tool for document classificatio
 
    You may need to install libmagic if you don't have it already, this is used to detect mimetypes and instructions to install for all OS's can be found [here](https://pypi.org/project/python-magic/)
 
-4. **Run the API**  
+4. **Install libmagic**
+   I am using python-magic to check for the mimetype of the file, the python package requires the user to have libmagic installed on their machine for it to work, the link to the docs is [here](https://pypi.org/project/python-magic/)
+   If the user is on Debian/Ubuntu
+
+   ```bash
+      sudo apt-get install libmagic1
+   ```
+
+   If you are windows based I have added `python-magic-bin` to the requirements so it should just work. This means if you are on linux you might get a warning that it wasn't able to find `python-magic-bin` but that should be ok.
+
+5. **Start Redis Server for Celery**
+   Install docker from [here](https://www.docker.com/get-started/) if you haven't already got it. Then open a new terminal and run the following
+
+   ```bash
+   docker run -d -p 6379:6379 redis
+   ```
+
+6. **Start Celery Worker**
+   Because I am on windows I had to use the command below to start the celery worker. It is due to the fact that the default uses `prefork` and windows doesn't support that. **Please note that this has to be ran from the root directory, not inside /api**
+
+   ```
+   celery -A api.celery_app worker --pool=threads --concurrency=8 --loglevel=info
+   ```
+
+   However if you are on Linux you should be able to use this
+
+   ```
+   celery -A api.celery_app worker --loglevel=info
+   ```
+
+7. **Run the API**  
    Start the API server:
+
    ```bash
    fastapi run main.py
    ```
+
    The API will be available at `http://localhost:8000` (or your configured port).
    Please note that the first process query will take longer as it is downloading the model
+
+8. **Optional Run Flower for Debug Info**
+   Flower provides a website about the status of celery workers and task. Can be useful if there are errors **Please note that this has to be ran from the root directory, not inside /api**
+   ```
+   celery -A api.celery_app flower
+   ```
 
 ## 📤 Document Uploads
 
