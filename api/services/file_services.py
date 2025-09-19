@@ -10,6 +10,7 @@ import PyPDF2
 from docx import Document
 from sqlmodel import Session
 from functools import lru_cache
+import magic
 
 from ..models.file_model import (
     ChunkingStrategy,
@@ -84,6 +85,30 @@ def file_reader_factory(file_name: str) -> FileReaderInterface:
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
 
+ALLOWED_MIME_TYPES = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+]
+
+
+async def check_file(file: File):
+    client_mime = file.content_type
+
+    file_bytes = await file.read(2048)
+    await file.seek(0)
+    real_mime = magic.from_buffer(file_bytes, mime=True)
+    if real_mime not in ALLOWED_MIME_TYPES:
+        return False, f"Invalid file type {real_mime}"
+
+    if client_mime != real_mime:
+        return (
+            False,
+            f"MIME mismatch: client said {client_mime}, but real type is {real_mime}",
+        )
+
+    return True, None
 
 def chunk_text(text: str):
     # basic implementation but allows easy improvements for headings and lists

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional
-from ..services.file_services import file_reader_factory
+from ..services.file_services import file_reader_factory, check_file
 from fastapi import (
     APIRouter,
     Depends,
@@ -12,7 +12,6 @@ from fastapi import (
 from ..services.file_services import process_file
 from sqlmodel import Session, select
 from pydantic import BaseModel
-import magic
 
 from ..database import get_session
 from ..models.file_model import (
@@ -93,32 +92,6 @@ async def process_file_request(
     )
 
     return file_record
-
-
-ALLOWED_MIME_TYPES = [
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "text/plain",
-]
-
-
-async def check_file(file: File):
-    client_mime = file.content_type
-
-    file_bytes = await file.read(2048)
-    await file.seek(0)
-    real_mime = magic.from_buffer(file_bytes, mime=True)
-    if real_mime not in ALLOWED_MIME_TYPES:
-        return False, f"Invalid file type {real_mime}"
-
-    if client_mime != real_mime:
-        return (
-            False,
-            f"MIME mismatch: client said {client_mime}, but real type is {real_mime}",
-        )
-
-    return True, None
 
 
 @router.post("/upload", response_model=FileRecord)
