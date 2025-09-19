@@ -1,5 +1,5 @@
-import type { SchemaFileRecordWithClassifications } from '@/types/types'
-import { useState, type FormEvent } from 'react'
+import { Models } from '@/types/types'
+import { useState } from 'react'
 import {
   Select,
   SelectContent,
@@ -13,11 +13,7 @@ import { Checkbox } from './checkbox'
 import { Button } from './button'
 import { Collapsible, CollapsibleContent } from './collapsible'
 import { ChevronsUpDown } from 'lucide-react'
-import {
-  useProcessFile,
-  type ChunkTypes,
-  type Models,
-} from '@/hooks/use-process-file'
+import { useProcessFile, type ChunkTypes } from '@/hooks/use-process-file'
 
 interface ProcessFileFormProps {
   rowId: number
@@ -84,14 +80,17 @@ export const ProcessFileForm = ({
                     <SelectValue placeholder="Select a model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={'knowledgator/comprehend_it-base'}>
+                    <SelectItem value={Models.knowledgator_comprehend_it_base}>
                       knowledgator/comprehend_it-base
                     </SelectItem>
-                    <SelectItem value={'facebook/bart-large-mnli'}>
+                    <SelectItem value={Models.facebook_bart_large_mnli}>
                       facebook/bart-large-mnli
                     </SelectItem>
-                    <SelectItem value={'Qwen/Qwen3-Embedding-0.6B'}>
+                    <SelectItem value={Models.Qwen_Qwen3_Embedding_0_6B}>
                       Qwen/Qwen3-Embedding-0.6B
+                    </SelectItem>
+                    <SelectItem value={Models.E5_large_v2}>
+                      intfloat/multilingual-e5-large-instruct
                     </SelectItem>
                   </SelectContent>
                 </Select>
