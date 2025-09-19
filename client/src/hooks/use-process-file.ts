@@ -1,3 +1,4 @@
+import { Models } from '@/types/types'
 import { useState, type FormEvent } from 'react'
 
 export type ChunkTypes = 'Number' | 'Paragraph'
@@ -8,17 +9,14 @@ interface ProcessFileFormProps {
   closeDialog: () => void
 }
 
-export type Models =
-  | 'facebook/bart-large-mnli'
-  | 'knowledgator/comprehend_it-base'
-  | 'Qwen/Qwen3-Embedding-0.6B'
-
 export const useProcessFile = ({
   rowId,
   onFileProcessStart,
   closeDialog,
 }: ProcessFileFormProps) => {
-  const [model, setModel] = useState<Models>('knowledgator/comprehend_it-base')
+  const [model, setModel] = useState<Models>(
+    Models.knowledgator_comprehend_it_base,
+  )
   const [chunkType, setChunkType] = useState<ChunkTypes>('Paragraph')
   const [chunkSize, setChunkSize] = useState<number>(200)
   const [chunkOverlapSize, setChunkOverlapSize] = useState<number>(50)
