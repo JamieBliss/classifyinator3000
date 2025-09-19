@@ -11,7 +11,7 @@ import {
   useReactTable,
   type VisibilityState,
 } from '@tanstack/react-table'
-import { ChevronDown, UploadCloud } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -41,12 +41,14 @@ interface DataTableProps {
   data: SchemaFileRecordWithClassifications[]
   columns: ColumnDef<SchemaFileRecordWithClassifications>[]
   onFileUploadSuccess: (fileId: number) => void
+  deleteFile: (fileId: number) => void
 }
 
 export function DataTable({
   data,
   columns,
   onFileUploadSuccess,
+  deleteFile,
 }: DataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -183,6 +185,7 @@ export function DataTable({
         isRowDetailsDialogOpen={isRowDetailsDialogOpen}
         setIsRowDetailsDialogOpen={setIsRowDetailsDialogOpen}
         onFileUploadSuccess={onFileUploadSuccess}
+        deleteFile={deleteFile}
       />
     </div>
   )

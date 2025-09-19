@@ -4,8 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import {
   type SchemaFileRecordWithClassifications,
-  type SchemaFileClassificationRead,
   FileStatus,
+  type SchemaFileClassificationWithScoresAndChunks,
 } from '@/types/types'
 import { StatusDot } from './status-dot'
 
@@ -19,7 +19,11 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
     accessorKey: 'filename',
     enableSorting: true,
     enableColumnFilter: true,
-    cell: ({ row }) => <div>{row.getValue('filename')}</div>,
+    cell: ({ row }) => (
+      <div className="max-w-[400px] overflow-hidden text-ellipsis">
+        {row.getValue('filename')}
+      </div>
+    ),
     header: ({ column }) => {
       return (
         <Button
@@ -33,6 +37,28 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
     },
   },
   {
+    accessorKey: 'model',
+    header: 'Model',
+    cell: ({ row }) => {
+      const status = row.getValue('status') as FileStatus
+
+      if (status === FileStatus.Processing) {
+        return <Skeleton className="h-[20px] w-[150px] rounded-full" />
+      }
+
+      const classifications = row.getValue(
+        'classifications',
+      ) as SchemaFileClassificationWithScoresAndChunks[]
+
+      if (classifications.length === 0) {
+        return <div>-</div>
+      }
+
+      const classification = classifications[0]
+      return <div>{classification.model}</div>
+    },
+  },
+  {
     accessorKey: 'classifications',
     id: 'classification_name',
     header: 'Classification',
@@ -40,7 +66,7 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
       const status = row.getValue('status') as FileStatus
       const classifications = row.getValue(
         'classifications',
-      ) as SchemaFileClassificationRead[]
+      ) as SchemaFileClassificationWithScoresAndChunks[]
 
       if (status === FileStatus.Processing) {
         return <Skeleton className="h-[20px] w-[100px] rounded-full" />
@@ -50,7 +76,11 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
         return <div>-</div>
       }
 
-      return <div>{classifications[0].classification}</div>
+      return (
+        <div>
+          {classifications[0].file_classification_scores[0].classification}
+        </div>
+      )
     },
   },
   {
@@ -61,7 +91,7 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
       const status = row.getValue('status') as FileStatus
       const classifications = row.getValue(
         'classifications',
-      ) as SchemaFileClassificationRead[]
+      ) as SchemaFileClassificationWithScoresAndChunks[]
 
       if (status === FileStatus.Processing) {
         return <Skeleton className="h-[20px] w-[40px] rounded-full" />
@@ -71,9 +101,9 @@ export const columns: ColumnDef<SchemaFileRecordWithClassifications>[] = [
         return <div>-</div>
       }
 
-      const classification_score = Math.round(
-        classifications[0].classification_score * 100,
-      )
+      const classification =
+        classifications[0].file_classification_scores[0].classification_score
+      const classification_score = Math.round(classification * 100)
       // Colour confidence scores based on value - numbers might need adjusting
       let colourClass = ''
       if (classification_score < 20) {

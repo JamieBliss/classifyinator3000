@@ -1,8 +1,8 @@
 from typing import Annotated
+from api.models.file_model import Models
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session
-
 from .database import create_db_and_tables, get_session
 from .routers import files as file_routes
 
@@ -23,7 +23,6 @@ app.add_middleware(
 )
 
 app.include_router(file_routes.router)
-
 
 @app.on_event("startup")
 def on_startup():

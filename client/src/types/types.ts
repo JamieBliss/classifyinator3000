@@ -4,403 +4,447 @@
  */
 
 export interface paths {
-    "/files/list": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Files */
-        get: operations["list_files_files_list_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/files/process": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Process File Request */
-        post: operations["process_file_request_files_process_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/files/upload": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Upload File */
-        post: operations["upload_file_files_upload_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/files/status/{file_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Check File Status */
-        get: operations["check_file_status_files_status__file_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/files/delete/{file_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete File */
-        delete: operations["delete_file_files_delete__file_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  '/files/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Files */
+    get: operations['list_files_files_list_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/files/process': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Process File Request */
+    post: operations['process_file_request_files_process_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/files/upload': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Upload File */
+    post: operations['upload_file_files_upload_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/files/status/{file_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Check File Status */
+    get: operations['check_file_status_files_status__file_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/files/delete/{file_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Delete File */
+    delete: operations['delete_file_files_delete__file_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: {
-        /** Body_upload_file_files_upload_post */
-        Body_upload_file_files_upload_post: {
-            /**
-             * File
-             * Format: binary
-             */
-            file: string;
-        };
-        /**
-         * ChunkingStrategy
-         * @enum {string}
-         */
-        ChunkingStrategy: ChunkingStrategy;
-        /**
-         * ClassificationLabel
-         * @enum {string}
-         */
-        ClassificationLabel: ClassificationLabel;
-        /** FileClassificationRead */
-        FileClassificationRead: {
-            /** Id */
-            id: number;
-            /** File Id */
-            file_id: number;
-            classification: components["schemas"]["ClassificationLabel"];
-            /** Classification Score */
-            classification_score: number;
-            /** Multi Label */
-            multi_label: boolean;
-            chunking_strategy?: components["schemas"]["ChunkingStrategy"] | null;
-            /** Chunk Size */
-            chunk_size?: number | null;
-            /** Chunk Overlap Size */
-            chunk_overlap_size?: number | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** FileRecord */
-        FileRecord: {
-            /** Id */
-            id?: number | null;
-            /** Filename */
-            filename: string;
-            /** File Contents */
-            file_contents: string;
-            /** @default Processing */
-            status: components["schemas"]["FileStatus"];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at?: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at?: string;
-        };
-        /** FileRecordWithClassifications */
-        FileRecordWithClassifications: {
-            /** Id */
-            id: number;
-            /** Filename */
-            filename: string;
-            status: components["schemas"]["FileStatus"];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /**
-             * Classifications
-             * @default []
-             */
-            classifications: components["schemas"]["FileClassificationRead"][];
-        };
-        /**
-         * FileStatus
-         * @enum {string}
-         */
-        FileStatus: FileStatus;
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** ProcessFileRequest */
-        ProcessFileRequest: {
-            /** File Id */
-            file_id: number;
-            chunking_strategy: components["schemas"]["ChunkingStrategy"];
-            /**
-             * Chunk Size
-             * @default 200
-             */
-            chunk_size: number;
-            /**
-             * Overlap
-             * @default 50
-             */
-            overlap: number;
-            /**
-             * Multi Label
-             * @default false
-             */
-            multi_label: boolean;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: {
+    /** Body_upload_file_files_upload_post */
+    Body_upload_file_files_upload_post: {
+      /**
+       * File
+       * Format: binary
+       */
+      file: string
+    }
+    /**
+     * ChunkingStrategy
+     * @enum {string}
+     */
+    ChunkingStrategy: ChunkingStrategy
+    /**
+     * ClassificationLabel
+     * @enum {string}
+     */
+    ClassificationLabel: ClassificationLabel
+    /** FileClassificationChunk */
+    FileClassificationChunk: {
+      /** Id */
+      id: number
+      /** File Classification Id */
+      file_classification_id: number
+      /** Start */
+      start: number
+      /** End */
+      end: number
+      /** Chunk */
+      chunk: string
+      chunk_classification_label: components['schemas']['ClassificationLabel']
+      /** Chunk Classification Score */
+      chunk_classification_score: number
+    }
+    /** FileClassificationScore */
+    FileClassificationScore: {
+      /** Id */
+      id: number
+      /** File Classification Id */
+      file_classification_id: number
+      /** Classification Score */
+      classification_score: number
+      classification: components['schemas']['ClassificationLabel']
+    }
+    /** FileClassificationWithScoresAndChunks */
+    FileClassificationWithScoresAndChunks: {
+      /** Id */
+      id: number
+      /** File Id */
+      file_id: number
+      /** Model */
+      model: string
+      /** Multi Label */
+      multi_label: boolean
+      chunking_strategy: components['schemas']['ChunkingStrategy']
+      /** Chunk Size */
+      chunk_size: number | null
+      /** Chunk Overlap Size */
+      chunk_overlap_size: number | null
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** File Classification Scores */
+      file_classification_scores: components['schemas']['FileClassificationScore'][]
+      /** File Classification Chunks */
+      file_classification_chunks: components['schemas']['FileClassificationChunk'][]
+    }
+    /** FileRecord */
+    FileRecord: {
+      /** Id */
+      id?: number | null
+      /** Filename */
+      filename: string
+      /** File Contents */
+      file_contents: string
+      /** @default Processing */
+      status: components['schemas']['FileStatus']
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at?: string
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at?: string
+    }
+    /** FileRecordWithClassifications */
+    FileRecordWithClassifications: {
+      /** Id */
+      id: number
+      /** Filename */
+      filename: string
+      status: components['schemas']['FileStatus']
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string
+      /** Classifications */
+      classifications?: components['schemas']['FileClassificationWithScoresAndChunks'][]
+    }
+    /**
+     * FileStatus
+     * @enum {string}
+     */
+    FileStatus: FileStatus
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components['schemas']['ValidationError'][]
+    }
+    /**
+     * Models
+     * @enum {string}
+     */
+    Models: Models
+    /** ProcessFileRequest */
+    ProcessFileRequest: {
+      /** File Id */
+      file_id: number
+      model: components['schemas']['Models']
+      chunking_strategy: components['schemas']['ChunkingStrategy']
+      /** Chunk Size */
+      chunk_size?: number | null
+      /** Overlap */
+      overlap?: number | null
+      /**
+       * Multi Label
+       * @default false
+       */
+      multi_label: boolean
+    }
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[]
+      /** Message */
+      msg: string
+      /** Error Type */
+      type: string
+    }
+  }
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type SchemaBodyUploadFileFilesUploadPost = components['schemas']['Body_upload_file_files_upload_post'];
-export type SchemaChunkingStrategy = components['schemas']['ChunkingStrategy'];
-export type SchemaClassificationLabel = components['schemas']['ClassificationLabel'];
-export type SchemaFileClassificationRead = components['schemas']['FileClassificationRead'];
-export type SchemaFileRecord = components['schemas']['FileRecord'];
-export type SchemaFileRecordWithClassifications = components['schemas']['FileRecordWithClassifications'];
-export type SchemaFileStatus = components['schemas']['FileStatus'];
-export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
-export type SchemaProcessFileRequest = components['schemas']['ProcessFileRequest'];
-export type SchemaValidationError = components['schemas']['ValidationError'];
-export type $defs = Record<string, never>;
+export type SchemaBodyUploadFileFilesUploadPost =
+  components['schemas']['Body_upload_file_files_upload_post']
+export type SchemaChunkingStrategy = components['schemas']['ChunkingStrategy']
+export type SchemaClassificationLabel =
+  components['schemas']['ClassificationLabel']
+export type SchemaFileClassificationChunk =
+  components['schemas']['FileClassificationChunk']
+export type SchemaFileClassificationScore =
+  components['schemas']['FileClassificationScore']
+export type SchemaFileClassificationWithScoresAndChunks =
+  components['schemas']['FileClassificationWithScoresAndChunks']
+export type SchemaFileRecord = components['schemas']['FileRecord']
+export type SchemaFileRecordWithClassifications =
+  components['schemas']['FileRecordWithClassifications']
+export type SchemaFileStatus = components['schemas']['FileStatus']
+export type SchemaHttpValidationError =
+  components['schemas']['HTTPValidationError']
+export type SchemaModels = components['schemas']['Models']
+export type SchemaProcessFileRequest =
+  components['schemas']['ProcessFileRequest']
+export type SchemaValidationError = components['schemas']['ValidationError']
+export type $defs = Record<string, never>
 export interface operations {
-    list_files_files_list_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileRecordWithClassifications"][];
-                };
-            };
-        };
-    };
-    process_file_request_files_process_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProcessFileRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileRecord"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upload_file_files_upload_post: {
-        parameters: {
-            query?: {
-                override?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_file_files_upload_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileRecord"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    check_file_status_files_status__file_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                file_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_file_files_delete__file_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                file_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
+  list_files_files_list_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FileRecordWithClassifications'][]
+        }
+      }
+    }
+  }
+  process_file_request_files_process_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProcessFileRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FileRecord']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  upload_file_files_upload_post: {
+    parameters: {
+      query?: {
+        override?: boolean
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_upload_file_files_upload_post']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FileRecord']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  check_file_status_files_status__file_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        file_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_file_files_delete__file_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        file_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
 }
 export enum ChunkingStrategy {
-    Number = "Number",
-    Paragraph = "Paragraph"
+  Number = 'Number',
+  Paragraph = 'Paragraph',
+  Sentence = 'Sentence',
 }
 export enum ClassificationLabel {
-    Technical_Documentation = "Technical Documentation",
-    Business_Proposal = "Business Proposal",
-    Legal_Document = "Legal Document",
-    Academic_Paper = "Academic Paper",
-    General_Article = "General Article",
-    Other = "Other"
+  Technical_Documentation = 'Technical Documentation',
+  Business_Proposal = 'Business Proposal',
+  Legal_Document = 'Legal Document',
+  Academic_Paper = 'Academic Paper',
+  General_Article = 'General Article',
+  Other = 'Other',
 }
 export enum FileStatus {
-    Processing = "Processing",
-    Completed = "Completed",
-    Failed = "Failed"
+  Processing = 'Processing',
+  Completed = 'Completed',
+  Failed = 'Failed',
+}
+export enum Models {
+  facebook_bart_large_mnli = 'facebook/bart-large-mnli',
+  knowledgator_comprehend_it_base = 'knowledgator/comprehend_it-base',
+  Qwen_Qwen3_Embedding_0_6B = 'Qwen/Qwen3-Embedding-0.6B',
+  E5_large_v2 = 'intfloat/multilingual-e5-large-instruct',
 }
