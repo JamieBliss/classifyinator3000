@@ -10,6 +10,7 @@ import { ProcessFileForm } from '../process-file-form'
 import { useClassificationData } from '@/hooks/use-classification-data'
 import { ClassificationDetails } from '../classification-details'
 import { DeleteFile } from '../delete-file'
+import { ScrollArea } from '../scroll-area'
 
 interface RowDialogProps {
   selectedRow: SchemaFileRecordWithClassifications | undefined
@@ -32,35 +33,37 @@ export const RowDialog = ({
       onOpenChange={setIsRowDetailsDialogOpen}
     >
       <DialogContent className="!max-w-[700px]">
-        <VisuallyHidden asChild>
-          <DialogTitle>Row Details</DialogTitle>
-        </VisuallyHidden>
-        {selectedRow && (
-          <>
-            {selectedRow.status !== FileStatus.Failed ? (
-              <>
-                <ClassificationChart
-                  row={selectedRow}
-                  {...classificationData}
-                />
-                <ClassificationDetails {...classificationData} />
-              </>
-            ) : (
-              <></>
-            )}
-            <ProcessFileForm
-              rowId={selectedRow.id}
-              onFileProcessStart={onFileUploadSuccess}
-              closeDialog={() => setIsRowDetailsDialogOpen(false)}
-              defaultIsOpen={selectedRow.status === FileStatus.Failed}
-            />
-          </>
-        )}
-        <DeleteFile
-          fileId={selectedRow?.id}
-          setIsRowDetailsDialogOpen={setIsRowDetailsDialogOpen}
-          deleteFile={deleteFile}
-        />
+        <ScrollArea className="max-h-[85vh]">
+          <VisuallyHidden asChild>
+            <DialogTitle>Row Details</DialogTitle>
+          </VisuallyHidden>
+          {selectedRow && (
+            <>
+              {selectedRow.status !== FileStatus.Failed ? (
+                <>
+                  <ClassificationChart
+                    row={selectedRow}
+                    {...classificationData}
+                  />
+                  <ClassificationDetails {...classificationData} />
+                </>
+              ) : (
+                <></>
+              )}
+              <ProcessFileForm
+                rowId={selectedRow.id}
+                onFileProcessStart={onFileUploadSuccess}
+                closeDialog={() => setIsRowDetailsDialogOpen(false)}
+                defaultIsOpen={selectedRow.status === FileStatus.Failed}
+              />
+            </>
+          )}
+          <DeleteFile
+            fileId={selectedRow?.id}
+            setIsRowDetailsDialogOpen={setIsRowDetailsDialogOpen}
+            deleteFile={deleteFile}
+          />
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   )
