@@ -2,6 +2,16 @@ import { useState } from 'react'
 import { Button } from './button'
 import { ChevronsUpDown } from 'lucide-react'
 import { Collapsible, CollapsibleContent } from './collapsible'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './dialog'
 
 interface DeleteFileProps {
   fileId: number | undefined
@@ -16,8 +26,10 @@ export const DeleteFile = ({
 }: DeleteFileProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
-  const handleDeleteFile = async (fileId: number) => {
+  const handleDeleteFile = () => {
+    if (!fileId) return
     deleteFile(fileId)
+    setIsOpen(false)
     setIsRowDetailsDialogOpen(false)
   }
   return (
@@ -40,13 +52,31 @@ export const DeleteFile = ({
         </Button>
       </div>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleContent>
-          <Button
-            onClick={() => handleDeleteFile(fileId as number)}
-            variant={'destructive'}
-          >
-            Delete File and Classifications
-          </Button>
+        <CollapsibleContent className="mt-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant={'destructive'} disabled={!fileId}>
+                Delete File and Classifications
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you absolutely sure?</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. This will permanently delete the
+                  file and all of its associated classification data.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleDeleteFile} variant={'destructive'}>
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CollapsibleContent>
       </Collapsible>
     </div>
