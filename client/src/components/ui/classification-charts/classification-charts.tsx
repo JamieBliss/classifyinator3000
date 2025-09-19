@@ -46,7 +46,7 @@ export function ClassificationChart({
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         {chartData.length > 0 ? (
-          false ? (
+          classifications![selectedClassificationKey!].multi_label === true ? (
             <ClassificationBarChart
               chartConfig={chartConfig}
               chartData={chartData}
@@ -90,16 +90,16 @@ export function ClassificationChart({
               <SelectValue placeholder="Select a classification" />
             </SelectTrigger>
             <SelectContent>
-              {Object.keys(classifications).map((key) => {
+              {Object.keys(classifications!).map((key) => {
                 const {
                   multi_label,
                   chunking_strategy,
                   chunk_size,
                   chunk_overlap_size,
-                } = classifications[key]
+                } = classifications![key]
                 return (
                   <SelectItem key={key} value={key}>
-                    model: {classifications[key].model}, cstrat:{' '}
+                    model: {classifications![key].model}, cstrat:{' '}
                     {chunking_strategy}, cs: {chunk_size || 'N/A'}, co:{' '}
                     {chunk_overlap_size || 'N/A'}, ml:{' '}
                     {multi_label === true ? 'true' : 'false'}
